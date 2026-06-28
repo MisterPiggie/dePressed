@@ -4,10 +4,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <wchar.h>
-#include <sys/mman.h>
 #include <assert.h>
 #include <stdarg.h>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
 
 #define KB(x) ((size_t)(x) * 1024)
 #define MB(x) (KB(x) * 1024)
@@ -50,25 +55,39 @@ void arena_destroy(Arena *a);
 
 static void *os_reserve(size_t size)
 {
+#ifdef _WIN32
+    return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
+#else
     void *ptr = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     return ptr == MAP_FAILED ? NULL : ptr;
+#endif 
 }
 
 static void os_commit(void *ptr, size_t size)
 {
+#ifdef _WIN32
+    VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE);
+#else
     mprotect(ptr, size, PROT_READ | PROT_WRITE);
+#endif 
 }
 
 
 static void os_release(void *ptr, size_t size)
 {
+#ifdef _WIN32
+    VirtualFree(ptr, 0, MEM_RELEASE);
+#else
     munmap(ptr, size);
+#endif
 }
 
 Arena arena_create(size_t reserve_size, size_t commit_chunk)
 {
     Arena a = {0};
     a.memory = (uint8_t *)os_reserve(reserve_size);
+    if (a.memory == NULL)
+        assert("failed to create arena");
     a.reserved = reserve_size;
     a.commit_chunk = commit_chunk;
     return a;
@@ -124,7 +143,13 @@ void arena_rewind(Arena *a)
 
 void arena_reset(Arena *a)
 {
-    madvise(a->memory, a->commited,  MADV_DONTNEED);
+#ifdef _WIN32
+    VirtualFree(a->memory, a->commited, MEM_DECOMMIT);
+#elif defined(__APPLE__)
+    mmap(a->memory, a->commited, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
+    madvise(a->memory, a->commited, MADV_DONTNEED);
+#endif
     a->used = 0;
     a->commited = 0;
 }
