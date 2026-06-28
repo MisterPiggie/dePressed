@@ -2,6 +2,8 @@
 #define TYPES_H
 
 #include "core/arena.h"
+#include "core/num_types.h"
+#include <hidapi/hidapi.h>
 
 typedef struct 
 {
@@ -11,9 +13,22 @@ typedef struct
 
 typedef struct 
 {
-   Arena arena;
-   via_keyboard *kbs;
-   size_t       kbs_count;
+    hid_device   *device;
+
+    U8      current_layer;
+    U8      layers_count;
+
+    S16     rows;
+    S16     cols;
+} model_keyboard;
+
+typedef struct 
+{
+    Arena arena;
+    via_keyboard *kbs;
+    size_t       kbs_count;
+
+    model_keyboard *model;
 } app;
 
 

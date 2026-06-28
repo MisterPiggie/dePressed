@@ -18,5 +18,7 @@ int main(void)
 
     printf("Path: %s\n", app.kbs->path);
     printf("Product: %ls\n", app.kbs->product);
+
+    get_layer_state(&app);
 }
 
