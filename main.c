@@ -1,24 +1,24 @@
 #include <hidapi/hidapi.h>
 #include <stdio.h>
-#include "key_capture/find_keyboard.h"
 #include "core/types.h"
-#include "core/constants.h"
+#include "keyboard/hid.h"
 
 int main(void)
 {
-    app app;
+    App app = {0};
     app.arena = arena_create(MB(100), KB(32));
-    app.kbs = arena_push_array(&app.arena, via_keyboard, MAX_KBS);
-    app.kbs_count = 0;
-    
-    if (!scan_for_keyboards(&app))
+    app.keyboards_count = 0;
+
+    if (!HID_get_suitable_keyboards(&app))
     {
-        printf("ERROR NO KBS FOUND\n");
+        printf("no keybords were found\n");
+        return -1;
     }
 
-    printf("Path: %s\n", app.kbs->path);
-    printf("Product: %ls\n", app.kbs->product);
-
-    get_layer_state(&app);
+    for (int i = 0; i < app.keyboards_count; i++)
+    {
+        printf("Name: %ls\n", app.keyboards[i].product_name);
+        printf("Path: %s\n", app.keyboards[i].path);
+    }
 }
 

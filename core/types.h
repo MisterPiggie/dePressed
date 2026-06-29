@@ -5,31 +5,34 @@
 #include "core/num_types.h"
 #include <hidapi/hidapi.h>
 
+typedef enum
+{
+    QMK,
+    ZMK,
+    VIAL,
+} KBS_firmware;
+
+typedef struct
+{
+    char            *path;
+    wchar_t         *product_name;
+    KBS_firmware    firmware;
+
+    hid_device      *device;
+
+    U8              layers_count;
+    S16             rows;
+    S16             cols;
+} KBS_model;
+
 typedef struct 
 {
-    char    *path;
-    wchar_t *product;
-} via_keyboard;
+    Arena       arena;
 
-typedef struct 
-{
-    hid_device   *device;
+    KBS_model   *keyboards;
+    size_t      keyboards_count;
+} App;
 
-    U8      current_layer;
-    U8      layers_count;
-
-    S16     rows;
-    S16     cols;
-} model_keyboard;
-
-typedef struct 
-{
-    Arena arena;
-    via_keyboard *kbs;
-    size_t       kbs_count;
-
-    model_keyboard *model;
-} app;
 
 
 #endif
