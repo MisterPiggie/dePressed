@@ -1,7 +1,9 @@
 #include <hidapi/hidapi.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "core/types.h"
 #include "keyboard/hid.h"
+#include "keyboard/vial.h"
 
 int main(void)
 {
@@ -20,5 +22,24 @@ int main(void)
         printf("Name: %ls\n", app.keyboards[i].product_name);
         printf("Path: %s\n", app.keyboards[i].path);
     }
+
+    for (int i = 0; i < app.keyboards_count; i++)
+    {
+        app.active_model_idx = i;
+        if(HID_open_device(&app.keyboards[i]))
+        {
+            printf("Connected\n");
+            break;
+        }
+    }
+
+
+    printf("Protocol version:\n");
+    VIA_get_layer_count(app.keyboards[app.active_model_idx].device);
+    printf("Vial check:\n");
+    VIAL_enabled(app.keyboards[app.active_model_idx].device);
+    printf("Def size:\n");
+    VIAL_get_def_size(app.keyboards[app.active_model_idx].device);
+
 }
 

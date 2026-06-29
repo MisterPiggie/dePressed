@@ -4,6 +4,7 @@
 #include "core/arena.h"
 #include "core/num_types.h"
 #include <hidapi/hidapi.h>
+#include <stdbool.h>
 
 typedef enum
 {
@@ -19,6 +20,7 @@ typedef struct
     KBS_firmware    firmware;
 
     hid_device      *device;
+    bool            connected;
 
     U8              layers_count;
     S16             rows;
@@ -31,6 +33,8 @@ typedef struct
 
     KBS_model   *keyboards;
     size_t      keyboards_count;
+
+    S16         active_model_idx;
 } App;
 
 

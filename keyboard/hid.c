@@ -1,6 +1,5 @@
 #include <hidapi/hidapi.h>
 #include "keyboard/hid.h"
-#include "core/constants.h"
 
 bool HID_get_suitable_keyboards(App *app)
 {
@@ -11,7 +10,7 @@ bool HID_get_suitable_keyboards(App *app)
 
     while (node != NULL)
     {
-        if (node->usage_page == VIAL_USAGE_PAGE)
+        if (node->usage_page == HID_USAGE_PAGE && node->usage == 0x61) 
             app->keyboards_count++;
         node = node->next;
     }
@@ -26,7 +25,7 @@ bool HID_get_suitable_keyboards(App *app)
 
     while (node != NULL)
     {
-        if (node->usage_page == VIAL_USAGE_PAGE)
+        if (node->usage_page == HID_USAGE_PAGE && node->usage == 0x61)
         {
             HID_device_info_to_KBS_model(&app->arena, node, &app->keyboards[i]);
             if (i < app->keyboards_count)
@@ -47,6 +46,21 @@ void HID_device_info_to_KBS_model(Arena *arena, struct hid_device_info *info, KB
     model->rows = 0;
     model->cols = 0;
     model->layers_count = 0;
+    model->connected = false;
 
     model->firmware = QMK;
+}
+
+bool HID_open_device(KBS_model *model)
+{
+    model->device = hid_open_path(model->path);
+    if (model->device == NULL)
+    {
+        model->connected = false;
+        return model->connected;
+    }
+
+    model->connected = true;
+
+    return model->connected;
 }
