@@ -1,12 +1,14 @@
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #include "vial.h"
 #include "hid.h"
 
 void VIA_flush_response(hid_device *device)
 {
     U8 scratch[VIA_PACKET_SIZE];
-    while (hid_read_timeout(device, scratch, sizeof(scratch), 0 > 0))
+    while (hid_read_timeout(device, scratch, sizeof(scratch), 0) > 0)
     {
     }
 }
@@ -19,12 +21,12 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
     if (res != VIA_PACKET_SIZE)
         return false;
 
+    VIA_settle_delay(1000);
+
     printf("Request: ");
     for (int i = 0; i < 65; i++)
         printf("%.02x", req[i]);
     printf("\n");
-
-    sleep(1);
 
     memset(resp, 0, RAW_HID_PACKET_SIZE + 1);
     res = hid_read_timeout(device, resp, RAW_HID_PACKET_SIZE + 1, VIA_READ_TIMEOUT);
@@ -84,4 +86,17 @@ int VIAL_get_def_size(hid_device *device)
     
 
     return 0;
+}
+
+static void VIA_settle_delay(U32 microseconds)
+{
+    struct timespec ts;
+    ts.tv_sec = microseconds / 1000000L;
+    ts.tv_nsec = (microseconds % 1000000L) * 1000L;
+
+    while (nanosleep(&ts, &ts) == -1)
+    {
+        if (errno != EINTR)
+            break;
+    }
 }

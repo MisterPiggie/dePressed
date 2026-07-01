@@ -21,3 +21,5 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp);
 int VIA_get_layer_count(hid_device *device);
 int VIAL_get_def_size(hid_device *device);
 bool VIAL_enabled(hid_device *device);
+
+static void VIA_settle_delay(U32 microseconds);
