@@ -16,6 +16,7 @@
 #define VIAL_GET_KEYBOARD_DEFINITION        0x02
 
 
+void VIA_flush_response(hid_device *device);
 bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp);
 int VIA_get_layer_count(hid_device *device);
 int VIAL_get_def_size(hid_device *device);

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 
 #define RAW_HID_PACKET_SIZE 64
+#define VIA_PACKET_SIZE (RAW_HID_PACKET_SIZE + 1)
+#define VIA_READ_TIMEOUT 100
 #define HID_USAGE_PAGE 0xFF60
 
 bool HID_get_suitable_keyboards(App *app);
