@@ -114,30 +114,10 @@ bool VIAL_get_def_size(KBS_model *model)
     return true;
 }
 
-bool VIAL_get_def(KBS_model *model, U8 *out)
+bool VIAL_get_def(KBS_model *model, U8 *out_def, U32 def_size)
 {
     U8 req[RAW_HID_PACKET_SIZE + 1] = {0};
     U8 resp[RAW_HID_PACKET_SIZE + 1] = {0};
-
-    U32 def_size = 0;
-
-    req[1] = VIAL_ESCAPE_BYTE;
-    req[2] = VIAL_GET_KEYBOARD_DEFINITION_SIZE;
-
-    if(!VIA_send_and_recieve(model->device, req, resp))
-        return false;
-
-    if (resp[0] == 0)
-        return false;
-
-    for (int i = 0; i < 4; i++)
-    {
-        def_size |= ((U32)resp[i]) << (i * 8);
-    }
-
-    printf("Def size: %u\n", def_size);
-
-    U8 def[def_size] = {0};
 
     return true;
 }
