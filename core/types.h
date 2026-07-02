@@ -25,6 +25,7 @@ typedef struct
     U8              layers_count;
     S16             rows;
     S16             cols;
+
 } KBS_model;
 
 typedef struct 

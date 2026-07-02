@@ -35,11 +35,11 @@ int main(void)
 
 
     printf("Protocol version:\n");
-    VIA_get_layer_count(app.keyboards[app.active_model_idx].device);
+    VIA_get_protocol_version(&app.keyboards[app.active_model_idx]);
     printf("Vial check:\n");
-    VIAL_enabled(app.keyboards[app.active_model_idx].device);
+    VIAL_enabled(&app.keyboards[app.active_model_idx]);
     printf("Def size:\n");
-    VIAL_get_def_size(app.keyboards[app.active_model_idx].device);
+    VIAL_get_def_size(&app.keyboards[app.active_model_idx]);
 
 }
 
