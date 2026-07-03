@@ -21,6 +21,8 @@ static bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp);
 static void VIA_settle_delay(U32 microseconds);
 
 
-bool VIA_get_protocol_version(KBS_model *model);
-bool VIAL_get_def_size(KBS_model *model);
+bool VIA_confirm_protocol_version(KBS_model *model);
 bool VIAL_enabled(KBS_model *model);
+
+bool VIAL_get_def_size(KBS_model *model, U32 *size);
+bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size);

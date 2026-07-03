@@ -29,36 +29,26 @@ static void VIA_settle_delay(U32 microseconds)
 bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
 {
     VIA_flush_response(device);
-    int res = hid_write(device, req, RAW_HID_PACKET_SIZE + 1);
+    S32 res = hid_write(device, req, VIA_PACKET_SIZE);
 
     if (res != VIA_PACKET_SIZE)
         return false;
 
-    VIA_settle_delay(1000);
+    VIA_settle_delay(2000);
 
-    printf("Request: ");
-    for (int i = 0; i < 33; i++)
-        printf("%.02x", req[i]);
-    printf("\n");
-
-    memset(resp, 0, RAW_HID_PACKET_SIZE + 1);
-    res = hid_read_timeout(device, resp, RAW_HID_PACKET_SIZE + 1, VIA_READ_TIMEOUT);
+    memset(resp, 0, VIA_PACKET_SIZE);
+    res = hid_read_timeout(device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
 
     if (res <= 0)
         return false;
 
-    printf("Response: ");
-    for (int i = 0; i < res; i++)
-        printf("%.02x", resp[i]);
-    printf("\n");
-
     return true;
 }
 
-bool VIA_get_protocol_version(KBS_model *model)
+bool VIA_confirm_protocol_version(KBS_model *model)
 {
-    U8 req[RAW_HID_PACKET_SIZE + 1] = {0};
-    U8 resp[RAW_HID_PACKET_SIZE + 1] = {0};
+    U8 req[VIA_PACKET_SIZE] = {0};
+    U8 resp[VIA_PACKET_SIZE] = {0};
 
     req[1] = VIA_GET_PROTOCOL_VERSION;
 
@@ -88,12 +78,10 @@ bool VIAL_enabled(KBS_model *model)
     return true;
 }
 
-bool VIAL_get_def_size(KBS_model *model)
+bool VIAL_get_def_size(KBS_model *model, U32 *size)
 {
     U8 req[RAW_HID_PACKET_SIZE + 1] = {0};
     U8 resp[RAW_HID_PACKET_SIZE + 1] = {0};
-
-    U32 def_size = 0;
 
     req[1] = VIAL_ESCAPE_BYTE;
     req[2] = VIAL_GET_KEYBOARD_DEFINITION_SIZE;
@@ -104,21 +92,51 @@ bool VIAL_get_def_size(KBS_model *model)
     if (resp[0] == 0)
         return false;
 
-    for (int i = 0; i < 4; i++)
-    {
-        def_size |= ((U32)resp[i]) << (i * 8);
-    }
-
-    printf("Def size: %u\n", def_size);
+    memcpy(size, resp, 4);
 
     return true;
 }
 
-bool VIAL_get_def(KBS_model *model, U8 *out_def, U32 def_size)
+bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
 {
     U8 req[RAW_HID_PACKET_SIZE + 1] = {0};
     U8 resp[RAW_HID_PACKET_SIZE + 1] = {0};
+    S32 res;
+    U32 total_res = 0;
+    U32 remaining = def_size;
+    U32 block_count = 0;
+    U32 copy_len = 0;
 
+    req[1] = VIAL_ESCAPE_BYTE;
+    req[2] = VIAL_GET_KEYBOARD_DEFINITION;
+
+    while (total_res < def_size)
+    {
+        req[3] = (block_count >>  0) & 0xFF;
+        req[4] = (block_count >>  8) & 0xFF;
+        req[5] = (block_count >> 16) & 0xFF;
+        req[6] = (block_count >> 24) & 0xFF;
+
+        VIA_flush_response(model->device);
+        res = hid_write(model->device, req, RAW_HID_PACKET_SIZE + 1);
+
+        if (res != VIA_PACKET_SIZE)
+            return false;
+
+        VIA_settle_delay(2000);
+
+        memset(resp, 0, VIA_PACKET_SIZE);
+        res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
+
+        if (res <= 0)
+            return false;
+
+        block_count++;
+        copy_len = (U32)res < remaining ? (U32)res : remaining;
+        memcpy(def_compressed + total_res, resp, copy_len);
+        total_res += copy_len;
+        remaining -= copy_len;
+    }
     return true;
 }
 
