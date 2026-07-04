@@ -1,6 +1,5 @@
 #include <lzma.h>
 #include <stdlib.h>
-#include "deps/cJSON.h"
 #include "keyboard/decode.h"
 
 U8 *XZ_decode(const U8 *input, U32 input_len, U32 *out_len)
@@ -32,12 +31,12 @@ U8 *XZ_decode(const U8 *input, U32 input_len, U32 *out_len)
     return out_buf;
 }
 
-// cJSON *JSON_parse_buffer(const U8 *buffer, U32 buffer_len)
-// {
-//     cJSON *root = cJSON_ParseWithLength((char *)buffer, buffer_len);
-//
-//     if (root == NULL)
-//     {
-//         return NULL;
-//     }
-// }
+cJSON *JSON_parse_buffer(const U8 *buffer, U32 buffer_len)
+{
+    cJSON *root = cJSON_ParseWithLength((char *)buffer, buffer_len);
+
+    if (root == NULL)
+        return NULL;
+
+    return root;
+}

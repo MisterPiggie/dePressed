@@ -71,8 +71,10 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
     }
 
     if (!is_valid)
+    {
+        printf("Not valid\n");
         return false;
-
+    }
     return true;
 }
 
@@ -87,12 +89,25 @@ bool VIA_confirm_protocol_version(KBS_model *model)
     if(!VIA_send_and_recieve(model->device, req, resp))
         return false;
 
-    for (int i = 0 ; i < VIA_PACKET_SIZE; i++)
-        printf("%02x", resp[i]);
-    printf("\n");
+    return true;
+}
+
+bool VIA_get_layers_count(KBS_model *model)
+{
+    U8 req[VIA_PACKET_SIZE] = {0};
+    U8 resp[VIA_PACKET_SIZE] = {0};
+
+    req[1] = VIA_GET_LAYER_COUNT;
+
+
+    if(!VIA_send_and_recieve(model->device, req, resp))
+        return false;
+
+    model->layers_count = resp[1];
 
     return true;
 }
+
 
 
 bool VIAL_enabled(KBS_model *model)
@@ -158,9 +173,8 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
         for (attempt = 0; attempt < 5; attempt++)
         {
             VIA_flush_response(model->device);
-            res = hid_write(model->device, req, RAW_HID_PACKET_SIZE + 1);
-            printf("block %u: hid_write res=%d\n", block_count, res);
-
+            
+            res = hid_write(model->device, req, VIA_PACKET_SIZE);
             if (res != VIA_PACKET_SIZE)
                 continue;
 
@@ -168,7 +182,6 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
 
             memset(resp, 0, VIA_PACKET_SIZE);
             res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
-            printf("block %u: hid_read res=%d\n", block_count, res);
             if (res <= 0)
                 continue;
 
@@ -189,9 +202,6 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
             break;
         }
 
-
-
-
         if (!is_valid)
         {
             printf("Failure on block: %d\n", block_count);
@@ -203,6 +213,83 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
         memcpy(def_compressed + total_res, resp, copy_len);
         total_res += copy_len;
         remaining -= copy_len;
+    }
+    return true;
+}
+
+bool VIAL_get_keymap(KBS_model *model, U8 *keymap_buf, U32 keymap_size)
+{
+    U8 req[RAW_HID_PACKET_SIZE + 1] = {0};
+    U8 resp[RAW_HID_PACKET_SIZE + 1] = {0};
+    S32 res;
+    U32 offset = 0;
+    U16 resp_offset;
+    U8 attempt;
+    U8 chunk_size;
+
+    bool is_valid;
+    bool all_zero;
+
+    req[1] = VIA_GET_KEYMAP_BUFFER;
+
+    while (offset < keymap_size)
+    {
+        chunk_size = (keymap_size - offset) < MAX_CHUNK_SIZE 
+            ? (U8)(keymap_size - offset) 
+            : MAX_CHUNK_SIZE;
+
+        req[2] = (offset >>  8) & 0xFF;
+        req[3] = offset & 0xFF;
+        req[4] = chunk_size;
+
+        is_valid = false;
+
+        for (attempt = 0; attempt < 5; attempt++)
+        {
+            VIA_flush_response(model->device);
+            res = hid_write(model->device, req, RAW_HID_PACKET_SIZE + 1);
+
+            if (res != VIA_PACKET_SIZE)
+                continue;
+
+            VIA_settle_delay(2000);
+
+            memset(resp, 0, VIA_PACKET_SIZE);
+            res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
+            if (res <= 0)
+                continue;
+
+            resp_offset = (resp[1] << 8) | resp[2];
+            if (resp[0] != VIA_GET_KEYMAP_BUFFER || resp_offset != offset)
+            {
+                continue;
+            }
+
+            all_zero = true;
+            for (int i = 0; i < res; i++)
+            {
+                if (resp[i] != 0)
+                {
+                    all_zero = false;
+                    break;
+                }
+            }
+
+            if (all_zero)
+                continue;
+
+            is_valid = true;
+            break;
+        }
+
+        if (!is_valid)
+        {
+            printf("Keymap failed\n");
+            return false;
+        }
+
+        memcpy(keymap_buf + offset, resp + 5, chunk_size);
+        offset += chunk_size;
     }
     return true;
 }

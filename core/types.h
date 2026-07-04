@@ -30,6 +30,15 @@ typedef struct
 
 typedef struct 
 {
+    U8      x;
+    U8      y;
+
+    U16     code;
+     
+} KBS_key;
+
+typedef struct 
+{
     Arena       arena;
 
     KBS_model   *keyboards;

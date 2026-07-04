@@ -8,7 +8,7 @@ bool KBS_connect_keyboard(App *app)
     KBS_model *model = &app->keyboards[app->active_model_idx];
     U32 def_size;
     U32 json_size;
-    U8 *json;
+    U8 *decompressed_json;
 
     if (!HID_open_device(model))
     {
@@ -18,6 +18,11 @@ bool KBS_connect_keyboard(App *app)
     if (!VIA_confirm_protocol_version(model))
     {
         printf("failed protocol\n");
+        return false;
+    }
+    if (!VIA_get_layers_count(model))
+    {
+        printf("failed layers count\n");
         return false;
     }
     if (!VIAL_enabled(model))
@@ -48,10 +53,60 @@ bool KBS_connect_keyboard(App *app)
         printf("%02x", def_compressed[i]);
     }
 
-    json = XZ_decode(def_compressed, def_size, &json_size);
+    decompressed_json = XZ_decode(def_compressed, def_size, &json_size);
+    printf("JSON size: %u\n", json_size);
+    for (int i = 0; i < json_size; i++)
+    {
+        printf("%c", decompressed_json[i]);
+    }
 
-    if (!json) 
+    if (!decompressed_json) 
         return false;
+
+    cJSON *json = JSON_parse_buffer(decompressed_json, json_size);
+    if (!json)
+    {
+        printf("JSON\n");
+        return false;
+    }
+
+    cJSON *matrix = cJSON_GetObjectItemCaseSensitive(json, "matrix");
+    if(!cJSON_IsObject(matrix))
+    {
+        printf("matrix\n");
+        return false;
+    }
+    
+    cJSON *cols = cJSON_GetObjectItemCaseSensitive(matrix, "cols");
+    if (!cJSON_IsNumber(cols))
+    {
+        printf("cols\n");
+        return false;
+    }
+    
+    cJSON *rows = cJSON_GetObjectItemCaseSensitive(matrix, "rows");
+    if (!cJSON_IsNumber(rows))
+    {
+        printf("rows\n");
+        return false;
+    }
+    model->rows = rows->valueint;
+
+    model->cols = cols->valueint;
+
+    U32 keymap_size = model->cols * model->rows * model->layers_count * 2;
+    U8 keymap_buf[keymap_size];
+
+    if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
+        return false;
+
+    printf("Keymap: %u\n", keymap_size);
+    for (int i = 0; i < keymap_size; i++)
+    {
+        if (i % 2 == 0)
+            printf("\n");
+        printf("%02x", keymap_buf[i]);
+    }
 
     return true;
 }
