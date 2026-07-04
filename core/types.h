@@ -17,24 +17,33 @@ typedef struct
 {
     char            *path;
     wchar_t         *product_name;
+    hid_device      *device;
+
     KBS_firmware    firmware;
 
-    hid_device      *device;
     bool            connected;
 
-    U8              layers_count;
-    S16             rows;
-    S16             cols;
+    U8              rows;
+    U8              cols;
 
+    U8              layers_count;
 } KBS_model;
 
 typedef struct 
 {
-    U8      x;
-    U8      y;
+    F32     x;
+    F32     y;
+
+    F32     rx;
+    F32     ry;
 
     U16     code;
-     
+
+    U8      row;
+    U8      col;
+
+    U8      width;
+    U8      height;
 } KBS_key;
 
 typedef struct 

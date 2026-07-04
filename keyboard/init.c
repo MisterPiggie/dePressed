@@ -94,19 +94,18 @@ bool KBS_connect_keyboard(App *app)
 
     model->cols = cols->valueint;
 
+    cJSON *json_keymap = cJSON_GetObjectItemCaseSensitive(json, "keymap");
+    if (!cJSON_IsArray(json_keymap))
+    {
+        printf("json keymap\n");
+        return false;
+    }
+
     U32 keymap_size = model->cols * model->rows * model->layers_count * 2;
     U8 keymap_buf[keymap_size];
 
     if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
         return false;
-
-    printf("Keymap: %u\n", keymap_size);
-    for (int i = 0; i < keymap_size; i++)
-    {
-        if (i % 2 == 0)
-            printf("\n");
-        printf("%02x", keymap_buf[i]);
-    }
 
     return true;
 }
