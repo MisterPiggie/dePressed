@@ -1,5 +1,4 @@
 #include <hidapi/hidapi.h>
-#include <stdio.h>
 #include <unistd.h>
 #include "core/types.h"
 #include "keyboard/hid.h"
@@ -14,6 +13,8 @@ int main(void)
 
     HID_get_suitable_keyboards(&app);
     KBS_connect_keyboard(&app);
+
+    listen_for_keypresses(&app.keyboards[app.active_model_idx]);
 
 }
 

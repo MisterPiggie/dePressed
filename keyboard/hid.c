@@ -64,3 +64,26 @@ bool HID_open_device(KBS_model *model)
 
     return model->connected;
 }
+
+void listen_for_keypresses(KBS_model *model)
+{
+    U8 buf[RAW_HID_PACKET_SIZE];
+
+    while (1)
+    {
+        int res = hid_read_timeout(model->device, buf, RAW_HID_PACKET_SIZE, 100);
+
+        if (res > 0) 
+        {
+            if (buf[0] == ID_CUSTOM_KEY_EVENT)
+            {
+                U8 row = buf[1], col = buf[2], pressed = buf[3];
+                printf("Row: %02x, Col: %02x, Pressed: %02x\n", row, col, pressed);
+            } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
+            {
+                U8 layer = buf[1];
+                printf("Layer: %02x\n", layer);
+            }
+        }
+    }
+}
