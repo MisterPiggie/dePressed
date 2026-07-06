@@ -106,14 +106,12 @@ bool KBS_connect_keyboard(App *app)
 
     cJSON *row;
     U8 key_idx = 0;
-    printf("Parse started\n");
 
     cJSON_ArrayForEach(row, json_keymap)
     {
         if (!cJSON_IsArray(row))
             continue;
 
-        printf("Row selected\n");
 
         cursor.y += 1;
         cursor.x = cursor.rotation_x;
@@ -125,7 +123,6 @@ bool KBS_connect_keyboard(App *app)
                 apply_offset(&cursor, item);
             else if (cJSON_IsString(item))
             {
-                printf("Key added\n");
                 KBS_key *key = &model->layout.keys[key_idx];
                 key->x = cursor.x;
                 key->y = cursor.y;
@@ -145,19 +142,44 @@ bool KBS_connect_keyboard(App *app)
         }
     }
 
+
+    U32 keymap_size = model->layers_count * model->rows * model->cols * 2;
+    U8 keymap_buf[keymap_size];
+
+    if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
+    {
+        printf("Keymap fail\n");
+        return false;
+    }
+
+    for (int i = 0; i < model->layout.key_count; i++)
+    {
+        KBS_key *key = &model->layout.keys[i];
+        key->code = arena_push_array(&app->arena, U16, model->layers_count);
+
+        for (int j = 0; j < model->layers_count; j++)
+        {
+            U32 slot_idx = key->row * model->cols + key->col + (model->rows * model->cols) * j;
+            printf("Slot idx: %d; ", slot_idx);
+            U32 byte_idx = slot_idx * 2;
+            key->code[j] = keymap_buf[byte_idx] | (keymap_buf[byte_idx + 1] << 8);
+        }
+        printf("\n");
+    }
+
     for (int i = 0; i < model->layout.key_count; i++)
     {
         KBS_key key = model->layout.keys[i];
         printf("Key idx: %d; X = %f; Y = %f\n", i, key.x, key.y);
-        printf("Row = %c; Col = %c\n", key.row, key.col);
+        printf("Row = %d; Col = %d\n", key.row, key.col);
         printf("Angle = %f; RX = %f; RY = %f\n\n", key.angle, key.rx, key.ry);
+        printf("Key codes: ");
+        for (int j = 0; j < model->layers_count; j++)
+        {
+            printf("%u ", key.code[j]);
+        }
+        printf("\n");
     }
-
-    U32 keymap_size = model->cols * model->rows * model->layers_count * 2;
-    U8 keymap_buf[keymap_size];
-
-    if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
-        return false;
 
     return true;
 }
