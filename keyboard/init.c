@@ -134,6 +134,7 @@ bool KBS_connect_keyboard(App *app)
 
                 parse_row_col(item->valuestring, &key->row, &key->col);
 
+
                 cursor.x += cursor.width;
                 cursor.width = 1;
                 cursor.height = 1;
@@ -157,28 +158,13 @@ bool KBS_connect_keyboard(App *app)
         KBS_key *key = &model->layout.keys[i];
         key->code = arena_push_array(&app->arena, U16, model->layers_count);
 
+
         for (int j = 0; j < model->layers_count; j++)
         {
             U32 slot_idx = key->row * model->cols + key->col + (model->rows * model->cols) * j;
-            printf("Slot idx: %d; ", slot_idx);
             U32 byte_idx = slot_idx * 2;
             key->code[j] = keymap_buf[byte_idx] | (keymap_buf[byte_idx + 1] << 8);
         }
-        printf("\n");
-    }
-
-    for (int i = 0; i < model->layout.key_count; i++)
-    {
-        KBS_key key = model->layout.keys[i];
-        printf("Key idx: %d; X = %f; Y = %f\n", i, key.x, key.y);
-        printf("Row = %d; Col = %d\n", key.row, key.col);
-        printf("Angle = %f; RX = %f; RY = %f\n\n", key.angle, key.rx, key.ry);
-        printf("Key codes: ");
-        for (int j = 0; j < model->layers_count; j++)
-        {
-            printf("%u ", key.code[j]);
-        }
-        printf("\n");
     }
 
     return true;
@@ -215,6 +201,8 @@ static void apply_offset(KBS_cursor *cursor, cJSON *item)
 static void parse_row_col(const char *label, U8 *row, U8 *col)
 {
     char buf[32];
+    U32 temp_row = 0;
+    U32 temp_col = 0;
     const char *nl = strchr(label, '\n');
     size_t len = nl ? (size_t)(nl - label) : strlen(label);
     if (len >= sizeof(buf)) 
@@ -222,6 +210,8 @@ static void parse_row_col(const char *label, U8 *row, U8 *col)
     memcpy(buf, label, len);
 
     buf[len] = '\0';
-    sscanf(buf, "%c,%c", row, col);
+    sscanf(buf, "%d,%d", &temp_row, &temp_col);
+    *row = (U8)temp_row;
+    *col = (U8)temp_col;
 }
 

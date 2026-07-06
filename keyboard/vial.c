@@ -40,9 +40,6 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
         VIA_flush_response(device);
         res = hid_write(device, req, RAW_HID_PACKET_SIZE + 1);
 
-        for (int i = 0 ; i < VIA_PACKET_SIZE; i++)
-            printf("%02x", req[i]);
-        printf("\n");
         if (res != VIA_PACKET_SIZE)
             continue;
 
@@ -204,7 +201,6 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
 
         if (!is_valid)
         {
-            printf("Failure on block: %d\n", block_count);
             return false;
         }
 
