@@ -1,10 +1,10 @@
 #ifndef TYPES_H
 #define TYPES_H
-
 #include "core/arena.h"
 #include "core/num_types.h"
 #include <hidapi/hidapi.h>
 #include <stdbool.h>
+#include <SDL3/SDL.h>
 
 typedef enum
 {
@@ -82,6 +82,9 @@ typedef struct
     size_t      keyboards_count;
 
     S16         active_model_idx;
+
+    SDL_Window   *window;
+    SDL_Renderer *renderer;
 } App;
 
 

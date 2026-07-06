@@ -1,4 +1,5 @@
 firmware/
+SDL/a.out
 a.out
 compile_flags.txt
 test.txt
