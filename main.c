@@ -10,6 +10,7 @@ int main(void)
     App app = {0};
     app.arena = arena_create(MB(100), KB(32));
     app.keyboards_count = 0;
+    app.shared = arena_push_struct(&app.arena, App_shared);
 
     HID_get_suitable_keyboards(&app);
     if (app.keyboards_count == 0)
@@ -23,7 +24,7 @@ int main(void)
 
     KBS_connect_keyboard(&app);
 
-    listen_for_keypresses(&app.keyboards[app.active_model_idx]);
+    listen_for_keypresses(&app.keyboards[app.active_model_idx], app.shared);
 
 }
 

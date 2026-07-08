@@ -65,7 +65,7 @@ bool HID_open_device(KBS_model *model)
     return model->connected;
 }
 
-void listen_for_keypresses(KBS_model *model)
+void listen_for_keypresses(KBS_model *model, App_shared *shared)
 {
     U8 buf[RAW_HID_PACKET_SIZE];
 
@@ -79,12 +79,12 @@ void listen_for_keypresses(KBS_model *model)
             {
                 U8 row = buf[1], col = buf[2], pressed = buf[3];
                 if (pressed == 1)
-                    model->layout.keys[model->lookup[row * model->cols + col]].pressed = true;
+                    model->pressed[model->lookup[row * model->cols + col]]= true;
                 else if (pressed == 0)
-                    model->layout.keys[model->lookup[row * model->cols + col]].pressed = false;
+                    model->pressed[model->lookup[row * model->cols + col]]= false;
             } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
             {
-                model->active_layer = buf[1];
+                shared->active_layer = buf[1];
 
             }
         }

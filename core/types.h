@@ -61,6 +61,7 @@ typedef struct
     wchar_t         *product_name;
     hid_device      *device;
     U8              *lookup;
+    bool            *pressed;
 
     KBS_layout      layout;
 
@@ -72,8 +73,16 @@ typedef struct
     U8              cols;
 
     U8              layers_count;
+
 } KBS_model;
 
+typedef struct 
+{
+    pthread_mutex_t mutex;
+    U8              active_layer;
+    bool            *pressed;
+    atomic_bool     running;
+} App_shared;
 
 typedef struct 
 {
@@ -83,17 +92,12 @@ typedef struct
     size_t      keyboards_count;
 
     S16         active_model_idx;
+    App_shared  *shared;
 
     SDL_Window   *window;
     SDL_Renderer *renderer;
 } App;
 
-typedef struct 
-{
-    pthread_mutex_t mutex;
-    U8              active_layer;
-    atomic_bool     running;
-} App_shared;
 
 
 #endif

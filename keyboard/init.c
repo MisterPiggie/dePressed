@@ -43,8 +43,7 @@ bool KBS_connect_keyboard(App *app)
     U8 def_compressed[def_size];
 
     if (!VIAL_get_def(model, def_compressed, def_size))
-    {
-        printf("failed def\n");
+    { printf("failed def\n");
         return false;
     }
 
@@ -157,6 +156,9 @@ bool KBS_connect_keyboard(App *app)
     }
 
     model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
+    model->pressed = arena_push_array_zero(&model->arena, bool, model->layout.key_count);
+    app->shared->pressed = model->pressed;
+
     for (int i = 0; i < model->layout.key_count; i++)
     {
         KBS_key *key = &model->layout.keys[i];
@@ -174,6 +176,8 @@ bool KBS_connect_keyboard(App *app)
         model->lookup[slot] = i;
     }
 
+    printf("App arena used: %zu / %zu bytes \n", app->arena.used, app->arena.commited);
+    printf("Model arena used: %zu / %zu bytes\n", model->arena.used, model->arena.commited);
 
     return true;
 }
