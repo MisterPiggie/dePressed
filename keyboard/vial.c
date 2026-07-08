@@ -2,6 +2,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <errno.h>
 #include "vial.h"
 #include "hid.h"
 

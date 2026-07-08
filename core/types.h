@@ -3,6 +3,8 @@
 #include "core/arena.h"
 #include "core/num_types.h"
 #include <hidapi/hidapi.h>
+#include <pthread.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 
@@ -36,9 +38,6 @@ typedef struct
 {
     KBS_key *keys;
     U32     key_count;
-
-    U32     *active_layers;
-    U32     active_layer_count;
 } KBS_layout;
 
 typedef struct
@@ -57,11 +56,13 @@ typedef struct
 
 typedef struct
 {
+    Arena           arena;
     char            *path;
     wchar_t         *product_name;
     hid_device      *device;
+    U8              *lookup;
+
     KBS_layout      layout;
-    
 
     KBS_firmware    firmware;
 
@@ -87,6 +88,12 @@ typedef struct
     SDL_Renderer *renderer;
 } App;
 
+typedef struct 
+{
+    pthread_mutex_t mutex;
+    U8              active_layer;
+    atomic_bool     running;
+} App_shared;
 
 
 #endif

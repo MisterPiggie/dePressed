@@ -6,6 +6,7 @@
 bool KBS_connect_keyboard(App *app)
 {
     KBS_model *model = &app->keyboards[app->active_model_idx];
+    model->arena = arena_create(MB(10), KB(1));
     U32 def_size;
     U32 json_size;
     U8 *decompressed_json;
@@ -97,7 +98,7 @@ bool KBS_connect_keyboard(App *app)
         return false;
     }
 
-    model->layout.keys = arena_push_array(&app->arena, KBS_key, model->layout.key_count);
+    model->layout.keys = arena_push_array(&model->arena, KBS_key, model->layout.key_count);
 
     KBS_cursor cursor = {0};
     cursor.y = -1;
@@ -143,6 +144,8 @@ bool KBS_connect_keyboard(App *app)
         }
     }
 
+    cJSON_Delete(json);
+
 
     U32 keymap_size = model->layers_count * model->rows * model->cols * 2;
     U8 keymap_buf[keymap_size];
@@ -153,10 +156,11 @@ bool KBS_connect_keyboard(App *app)
         return false;
     }
 
+    model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
     for (int i = 0; i < model->layout.key_count; i++)
     {
         KBS_key *key = &model->layout.keys[i];
-        key->code = arena_push_array(&app->arena, U16, model->layers_count);
+        key->code = arena_push_array(&model->arena, U16, model->layers_count);
 
 
         for (int j = 0; j < model->layers_count; j++)
@@ -165,7 +169,11 @@ bool KBS_connect_keyboard(App *app)
             U32 byte_idx = slot_idx * 2;
             key->code[j] = keymap_buf[byte_idx] | (keymap_buf[byte_idx + 1] << 8);
         }
+
+        U8 slot = key->row * model->cols + key->col;
+        model->lookup[slot] = i;
     }
+
 
     return true;
 }

@@ -78,11 +78,14 @@ void listen_for_keypresses(KBS_model *model)
             if (buf[0] == ID_CUSTOM_KEY_EVENT)
             {
                 U8 row = buf[1], col = buf[2], pressed = buf[3];
-                printf("Row: %02x, Col: %02x, Pressed: %02x\n", row, col, pressed);
+                if (pressed == 1)
+                    model->layout.keys[model->lookup[row * model->cols + col]].pressed = true;
+                else if (pressed == 0)
+                    model->layout.keys[model->lookup[row * model->cols + col]].pressed = false;
             } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
             {
-                U8 layer = buf[1];
-                printf("Layer: %02x\n", layer);
+                model->active_layer = buf[1];
+
             }
         }
     }
