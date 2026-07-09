@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include "window.h"
+#include "button.h"
 #include "num_types.h"
 
 int main(void)
@@ -8,17 +9,52 @@ int main(void)
     SDL_Window *window = GUI_create_window();
     SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
 
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    GUI_button button = 
+    {
+        .rect = 
+        {
+            300, 250, 200, 60
+        },
+        .is_hovered = 0,
+        .is_pressed = 0
+    };
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
     SDL_RenderClear(renderer);
 
     SDL_Event event;
     U8 running = 1;
+
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) running = 0;
+
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && 
+                event.button.button == SDL_BUTTON_LEFT &&
+                button.is_hovered)
+            {
+                button.is_pressed = 1;
+            }
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+                button.is_pressed = 0;
         }
+
+        F32 mx, my;
+        SDL_GetMouseState(&mx, &my);
+        button.is_hovered = point_in_rect(mx, my, &button.rect);
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
         SDL_RenderClear(renderer);
+
+        if (button.is_pressed)
+            SDL_SetRenderDrawColor(renderer, 45, 45, 45, 255);
+        else if (button.is_hovered)
+            SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        else 
+            SDL_SetRenderDrawColor(renderer, 18, 18, 18, 255);
+
+        SDL_RenderFillRect(renderer, &button.rect);
+        SDL_RenderRect(renderer, &button.rect);
+
         SDL_RenderPresent(renderer);
     }
 

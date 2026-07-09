@@ -8,7 +8,7 @@
 int main(void)
 {
     App app = {0};
-    app.arena = arena_create(MB(100), KB(32));
+    app.arena = arena_create(MB(100), KB(1));
     app.keyboards_count = 0;
     app.shared = arena_push_struct(&app.arena, App_shared);
 
