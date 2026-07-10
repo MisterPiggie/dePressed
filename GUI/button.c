@@ -1,5 +1,7 @@
 #include "button.h"
 #include "font.h"
+#include <SDL3_image/SDL_image.h>
+
 
 bool point_in_rect(F32 x, F32 y, const SDL_FRect *r)
 {
@@ -49,7 +51,7 @@ void init_buttons(App *app)
         },
         .is_hovered = 0,
         .is_pressed = 0,
-        .text_texture = GUI_make_font_texture(app->font, app->renderer, "OK", app->fg_color)
+        .text_texture = GUI_make_font_texture(app->font, app->renderer, "OK", app->fg_color) //REPLACE WITH IMG
     };
 }
 
