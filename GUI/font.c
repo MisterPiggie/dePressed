@@ -4,7 +4,7 @@
 TTF_Font *GUI_open_font(void)
 {
     TTF_Init();
-    TTF_Font *font = TTF_OpenFont("officecodepro-light.otf", 12);
+    TTF_Font *font = TTF_OpenFont("src/officecodepro-light.otf", 12);
 
     return font;
 }

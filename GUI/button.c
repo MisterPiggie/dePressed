@@ -1,3 +1,4 @@
+
 #include "button.h"
 #include "font.h"
 #include <SDL3_image/SDL_image.h>
@@ -51,9 +52,43 @@ void init_buttons(App *app)
         },
         .is_hovered = 0,
         .is_pressed = 0,
-        .text_texture = GUI_make_font_texture(app->font, app->renderer, "OK", app->fg_color) //REPLACE WITH IMG
+        .text_texture = IMG_LoadTexture(app->renderer, "src/drag-hand-gesture-svgrepo-com.svg")
     };
 }
+
+void draw_button(App *app, GUI_button *button)
+{
+    SDL_Color bg = button->is_pressed ? app->pressed_color
+                 : button->is_hovered ? app->hover_color : app->idle_color;
+ 
+    SDL_SetRenderDrawColor(app->renderer, bg.r, bg.g, bg.b, bg.a);
+    SDL_RenderFillRect(app->renderer, &button->rect);
+
+    if (button->text_texture)
+    {
+        F32 text_width;
+        F32 text_height;
+
+        SDL_GetTextureSize(button->text_texture, &text_width, &text_height);
+
+        SDL_FRect text_dest =
+        {
+            button->rect.x + (button->rect.w - text_width) / 2.0f,
+            button->rect.y + (button->rect.h - text_height) / 2.0f,
+            text_width,
+            text_height,
+        };
+
+        SDL_RenderTexture(app->renderer, button->text_texture, NULL, &text_dest);
+    }
+}
+
+void draw_dropdown(App *app, GUI_dropdown *dropdown)
+{
+    SDL_SetRenderDrawColor(app->renderer, app->idle_color.r, app->idle_color.g, app->idle_color.b, app->idle_color.a);
+    SDL_RenderFillRect(app->renderer, &dropdown->rect);
+}
+ 
 
 
 

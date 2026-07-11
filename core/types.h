@@ -1,7 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 #include "core/arena.h"
-#include "GUI/window.h"
 #include "core/num_types.h"
 #include <hidapi/hidapi.h>
 #include <pthread.h>
@@ -9,6 +8,12 @@
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+
+typedef enum 
+{
+    SCREEN_SETUP,
+    SCREEN_MAIN,
+} GUI_state;
 
 typedef enum
 {
@@ -87,11 +92,6 @@ typedef struct
     bool        is_pressed;
 } GUI_button;
 
-typedef struct 
-{
-    SDL_FRect   rect;
-    SDL_Texture *icon;
-} GUI_drag_button;
 
 typedef struct
 {

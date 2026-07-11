@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
+#include "core/types.h"
 
-#define MARGIN 6
 
-SDL_HitTestResult GUI_drag_and_resize(SDL_Window *window, const SDL_Point *point, void *data);
+SDL_HitTestResult GUI_drag(SDL_Window *window, const SDL_Point *point, void *data);
+void render_drag_handle(App *app);
