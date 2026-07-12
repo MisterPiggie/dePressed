@@ -49,8 +49,11 @@ void handle_setup_events(App *app, SDL_Event *event)
     {
         if (point_in_rect(mouse_x, mouse_y, &app->ok_button.rect))
             app->ok_button.is_pressed = true;
+        if (point_in_rect(mouse_x, mouse_y, &app->exit_button.rect))
+            app->exit_button.is_pressed = true;
         if (point_in_rect(mouse_x, mouse_y, &app->dropdown.rect))
             app->dropdown.is_open = true;
+
     }
 
     if (event->type == SDL_EVENT_MOUSE_BUTTON_UP && event->button.button == SDL_BUTTON_LEFT)
@@ -63,12 +66,22 @@ void handle_setup_events(App *app, SDL_Event *event)
                 app->current_screen = SCREEN_MAIN;
             }
         }
+
         app->ok_button.is_pressed = false;
+
+        if (point_in_rect(mouse_x, mouse_y, &app->exit_button.rect))
+        {
+            SDL_Event quit_event;
+            quit_event.type = SDL_EVENT_QUIT;
+            SDL_PushEvent(&quit_event);
+        }
+        app->exit_button.is_pressed = false;
     }
 
     if (event->type == SDL_EVENT_MOUSE_MOTION)
     {
         app->ok_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->ok_button.rect);
+        app->exit_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->exit_button.rect);
     }
 }
 
@@ -107,6 +120,7 @@ void render_setup_screen(App *app)
 {
     draw_dropdown(app, &app->dropdown);
     draw_button(app, &app->ok_button);
+    draw_button(app, &app->exit_button);
 }
 
 void render_main_screen(App *app)

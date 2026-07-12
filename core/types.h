@@ -65,7 +65,7 @@ typedef struct
 {
     Arena           arena;
     char            *path;
-    wchar_t         *product_name;
+    char            *product_name;
     hid_device      *device;
     U8              *lookup;
     bool            *pressed;
@@ -99,6 +99,7 @@ typedef struct
     bool        is_open;
 
     SDL_Texture **options_texture;
+    SDL_Texture *placeholder_texture;
 
     S8          selected_idx;
 } GUI_dropdown;
@@ -129,6 +130,7 @@ typedef struct
 
     GUI_dropdown dropdown;
     GUI_button   ok_button;
+    GUI_button   exit_button;
     GUI_button   drag_button;
 
     SDL_Color    bg_color;

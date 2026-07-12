@@ -1,4 +1,5 @@
 #include <hidapi/hidapi.h>
+#include <SDL3/SDL.h>
 #include "keyboard/hid.h"
 
 bool HID_get_suitable_keyboards(App *app)
@@ -41,7 +42,9 @@ bool HID_get_suitable_keyboards(App *app)
 void HID_device_info_to_KBS_model(Arena *arena, struct hid_device_info *info, KBS_model *model)
 {
     model->path = arena_push_str(arena, info->path);
-    model->product_name = arena_push_wstr(arena, info->product_string);
+    char *utf8_str = SDL_iconv_wchar_utf8(info->product_string); // THIS IS SUCH A HACK I LOVE IT
+    model->product_name = arena_push_str(arena, utf8_str);
+    SDL_free(utf8_str);
 
     model->rows = 0;
     model->cols = 0;

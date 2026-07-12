@@ -8,14 +8,19 @@
 
 
 
-#define X_FRAC_OK  0.375f //37.5 from left
-#define Y_FRAC_OK  0.45f  //45 from top
-#define W_FRAC_OK  0.1f  //25 width
-#define H_FRAC_OK  0.037f   //10 heigth
+#define X_FRAC_OK  0.1f 
+#define Y_FRAC_OK  0.8f  
+#define W_FRAC_OK  0.3f  
+#define H_FRAC_OK  0.1f  
 
-#define X_FRAC_DROP  0.375f
+#define X_FRAC_EXIT  0.6f 
+#define Y_FRAC_EXIT  0.8f  
+#define W_FRAC_EXIT  0.3f  
+#define H_FRAC_EXIT  0.1f   
+
+#define X_FRAC_DROP  0.2f
 #define Y_FRAC_DROP  0.1f
-#define W_FRAC_DROP  0.25f
+#define W_FRAC_DROP  0.6f
 #define H_FRAC_DROP  0.1f
 
 #define X_FRAC_DRAG  0.94f
