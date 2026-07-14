@@ -40,3 +40,4 @@ cJSON *JSON_parse_buffer(const U8 *buffer, U32 buffer_len)
 
     return root;
 }
+

@@ -127,7 +127,7 @@ typedef struct
     U8          keyboards_count;
 
     S16         active_model_idx;
-    App_shared  *shared;
+    App_shared  shared;
 
     SDL_Window   *window;
     SDL_Renderer *renderer;

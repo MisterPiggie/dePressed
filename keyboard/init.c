@@ -167,7 +167,7 @@ bool KBS_connect_keyboard(App *app)
 
     model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
     model->pressed = arena_push_array_zero(&model->arena, bool, model->layout.key_count);
-    app->shared->pressed = model->pressed;
+    app->shared.pressed = model->pressed;
 
     for (int i = 0; i < model->layout.key_count; i++)
     {

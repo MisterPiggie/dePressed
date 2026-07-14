@@ -2,6 +2,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include "window.h"
 #include "button.h"
+#include "keyboard/hid.h"
 #include "hit_test.h"
 #include "core/num_types.h"
 #include "keyboard/init.h"
@@ -92,6 +93,9 @@ void handle_setup_events(App *app, SDL_Event *event)
 
         if (point_in_rect(mouse_x, mouse_y, &app->reload_button.rect))
         {
+            arena_rewind(&app->arena);
+            HID_get_suitable_keyboards(app);
+            app->dropdown.options_texture = arena_push_array(&app->arena, SDL_Texture *, app->keyboards_count);
         }
         app->reload_button.is_pressed = false;
     }
@@ -150,7 +154,7 @@ void render_main_screen(App *app)
     {
         KBS_key key = model.layout.keys[i];
 
-        SDL_Color color = app->shared->pressed[i] ? app->pressed_color : app->idle_color;
+        SDL_Color color = app->shared.pressed[i] ? app->pressed_color : app->idle_color;
         SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, 255);
         SDL_RenderFillRect(app->renderer, &key.rect);
     }

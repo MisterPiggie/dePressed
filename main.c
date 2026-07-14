@@ -15,7 +15,6 @@ int main(void)
     app.arena = arena_create(MB(100), KB(1));
     app.keyboards_count = 0;
     app.active_model_idx = -1;
-    app.shared = arena_push_struct(&app.arena, App_shared);
 
     app.current_screen = SCREEN_SETUP;
 
