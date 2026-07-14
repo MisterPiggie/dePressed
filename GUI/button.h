@@ -18,9 +18,14 @@
 #define W_FRAC_EXIT  0.3f  
 #define H_FRAC_EXIT  0.1f   
 
-#define X_FRAC_DROP  0.2f
+#define X_FRAC_RELOAD  0.1f
+#define Y_FRAC_RELOAD 0.1f
+#define W_FRAC_RELOAD 0.3f
+#define H_FRAC_RELOAD 0.1f
+
+#define X_FRAC_DROP  0.5f
 #define Y_FRAC_DROP  0.1f
-#define W_FRAC_DROP  0.6f
+#define W_FRAC_DROP  0.4f
 #define H_FRAC_DROP  0.1f
 
 #define X_FRAC_DRAG  0.94f

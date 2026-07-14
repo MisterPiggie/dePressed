@@ -1,3 +1,4 @@
+
 #include <stdbool.h>
 #include <hidapi/hidapi.h>
 #include "core/num_types.h"

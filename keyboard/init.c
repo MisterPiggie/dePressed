@@ -2,6 +2,9 @@
 #include "keyboard/hid.h"
 #include "keyboard/init.h"
 #include "keyboard/decode.h"
+#include <float.h>
+#include <SDL3/SDL.h>
+#include <math.h>
 
 bool KBS_connect_keyboard(App *app)
 {
@@ -123,6 +126,13 @@ bool KBS_connect_keyboard(App *app)
                 apply_offset(&cursor, item);
             else if (cJSON_IsString(item))
             {
+                if (is_multiline_label(item->valuestring))
+                {
+                    cursor.x += cursor.width;
+                    cursor.width = 1;
+                    cursor.height = 1;
+                    continue; 
+                }
                 KBS_key *key = &model->layout.keys[key_idx];
                 key->x = cursor.x;
                 key->y = cursor.y;
@@ -176,8 +186,7 @@ bool KBS_connect_keyboard(App *app)
         model->lookup[slot] = i;
     }
 
-    printf("App arena used: %zu / %zu bytes \n", app->arena.used, app->arena.commited);
-    printf("Model arena used: %zu / %zu bytes\n", model->arena.used, model->arena.commited);
+    KBS_get_bounds(app);
 
     return true;
 }
@@ -227,3 +236,54 @@ static void parse_row_col(const char *label, U8 *row, U8 *col)
     *col = (U8)temp_col;
 }
 
+static void KBS_get_bounds(App *app)
+{
+    KBS_model *model = &app->keyboards[app->active_model_idx];
+    F32 min_x = FLT_MAX, max_x = -FLT_MAX;
+    F32 min_y = FLT_MAX, max_y = -FLT_MAX;
+
+    for (int i = 0; i < model->layout.key_count; i++)
+    {
+        KBS_key *key = &model->layout.keys[i];
+
+        min_x = fminf(min_x, key->x);
+        min_y = fminf(min_y, key->y);
+        max_x = fmaxf(max_x, key->x + key->width);
+        max_y = fmaxf(max_y, key->y + key->height);
+    }
+    
+    model->layout.layout_width = max_x - min_x + MARGIN * 2;
+    model->layout.layout_height = max_y - min_y + MARGIN * 2;
+
+    S32 window_width, window_height;
+
+    SDL_GetWindowSize(app->window, &window_width, &window_height);
+
+    model->layout.scale = fminf(window_width / model->layout.layout_width, 
+                                window_height / model->layout.layout_height);
+
+    for (int i = 0; i < model->layout.key_count; i++)
+    {
+        KBS_key *key = &model->layout.keys[i];
+
+        F32 px_x = (key->x - min_x + MARGIN) * model->layout.scale;
+        F32 px_y = (key->y - min_y + MARGIN) * model->layout.scale;
+        F32 px_w = key->width * model->layout.scale;
+        F32 px_h = key->height * model->layout.scale;
+
+        F32 px_pad = BEETWEEN_KEY_PADDING * model->layout.scale;
+
+        key->rect = (SDL_FRect)
+        {
+            px_x + px_pad / 2.0f,
+            px_y + px_pad / 2.0f,
+            px_w - px_pad, 
+            px_h - px_pad,
+        };
+    }
+}
+
+static bool is_multiline_label(const char *label)
+{
+    return strchr(label, '\n') != NULL;
+}

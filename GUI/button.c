@@ -28,6 +28,20 @@ void init_buttons(App *app)
         .text_texture = GUI_make_font_texture(app->font, app->renderer, "OK", app->fg_color)
     };
 
+    app->reload_button = (GUI_button)
+    {
+        .rect = 
+        {
+            .x = win_width * X_FRAC_RELOAD,
+            .y = win_height * Y_FRAC_RELOAD,
+            .w = win_width * W_FRAC_RELOAD,
+            .h = win_height * H_FRAC_RELOAD,
+        },
+        .is_hovered = 0,
+        .is_pressed = 0,
+        .text_texture = GUI_make_font_texture(app->font, app->renderer, "RELOAD", app->fg_color)
+    };
+
     app->exit_button = (GUI_button)
     {
         .rect = 

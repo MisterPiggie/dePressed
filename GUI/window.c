@@ -4,6 +4,7 @@
 #include "button.h"
 #include "hit_test.h"
 #include "core/num_types.h"
+#include "keyboard/init.h"
 
 SDL_Window *GUI_create_window(void)
 {
@@ -16,10 +17,11 @@ SDL_Window *GUI_create_window(void)
     U32 screen_width = mode->w;
     U32 screen_height = mode->h;
 
-    F32 scale = 0.3f;
+    F32 scale_width = 0.3f;
+    F32 scale_height = 0.2f;
 
-    U32 window_width = (U32)screen_width * scale;
-    U32 window_height = (U32)screen_height * scale;
+    U32 window_width = (U32)screen_width * scale_width;
+    U32 window_height = (U32)screen_height * scale_height;
 
     
     
@@ -51,6 +53,8 @@ void handle_setup_events(App *app, SDL_Event *event)
             app->ok_button.is_pressed = true;
         if (point_in_rect(mouse_x, mouse_y, &app->exit_button.rect))
             app->exit_button.is_pressed = true;
+        if (point_in_rect(mouse_x, mouse_y, &app->reload_button.rect))
+            app->reload_button.is_pressed = true;
         if (point_in_rect(mouse_x, mouse_y, &app->dropdown.rect))
             app->dropdown.is_open = true;
 
@@ -62,7 +66,16 @@ void handle_setup_events(App *app, SDL_Event *event)
         {
             if (app->dropdown.selected_idx >= 0)
             {
-                app->active_model_idx = app->dropdown.selected_idx;
+                if (app->active_model_idx != app->dropdown.selected_idx)
+                {
+                    app->active_model_idx = app->dropdown.selected_idx;
+                    if (!KBS_connect_keyboard(app))
+                    {
+                        SDL_Event quit_event;
+                        quit_event.type = SDL_EVENT_QUIT;
+                        SDL_PushEvent(&quit_event);
+                    }
+                }
                 app->current_screen = SCREEN_MAIN;
             }
         }
@@ -76,12 +89,18 @@ void handle_setup_events(App *app, SDL_Event *event)
             SDL_PushEvent(&quit_event);
         }
         app->exit_button.is_pressed = false;
+
+        if (point_in_rect(mouse_x, mouse_y, &app->reload_button.rect))
+        {
+        }
+        app->reload_button.is_pressed = false;
     }
 
     if (event->type == SDL_EVENT_MOUSE_MOTION)
     {
         app->ok_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->ok_button.rect);
         app->exit_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->exit_button.rect);
+        app->reload_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->reload_button.rect);
     }
 }
 
@@ -121,11 +140,20 @@ void render_setup_screen(App *app)
     draw_dropdown(app, &app->dropdown);
     draw_button(app, &app->ok_button);
     draw_button(app, &app->exit_button);
+    draw_button(app, &app->reload_button);
 }
 
 void render_main_screen(App *app)
 {
-    (void) app;
+    KBS_model model = app->keyboards[app->active_model_idx];
+    for (int i = 0; i < model.layout.key_count; i++)
+    {
+        KBS_key key = model.layout.keys[i];
+
+        SDL_Color color = app->shared->pressed[i] ? app->pressed_color : app->idle_color;
+        SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, 255);
+        SDL_RenderFillRect(app->renderer, &key.rect);
+    }
 }
 
 void render_frame(App *app)

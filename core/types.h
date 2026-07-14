@@ -24,27 +24,34 @@ typedef enum
 
 typedef struct 
 {
-    F32     x;
-    F32     y;
+    SDL_FRect rect;
 
-    F32     rx;
-    F32     ry;
+    F32       x;
+    F32       y;
 
-    F32     angle;
+    F32       rx;
+    F32       ry;
 
-    U16     *code;
+    F32       angle;
 
-    U8      row;
-    U8      col;
+    U16       *code;
 
-    U8      width;
-    U8      height;
+    U8        row;
+    U8        col;
+
+    U8        width;
+    U8        height;
 } KBS_key;
 
 typedef struct
 {
     KBS_key *keys;
     U32     key_count;
+
+    F32     layout_width;
+    F32     layout_height;
+
+    F32     scale;
 } KBS_layout;
 
 typedef struct
@@ -130,6 +137,7 @@ typedef struct
 
     GUI_dropdown dropdown;
     GUI_button   ok_button;
+    GUI_button   reload_button;
     GUI_button   exit_button;
     GUI_button   drag_button;
 
