@@ -81,14 +81,16 @@ void listen_for_keypresses(KBS_model *model, App_shared *shared)
             if (buf[0] == ID_CUSTOM_KEY_EVENT)
             {
                 U8 row = buf[1], col = buf[2], pressed = buf[3];
-                if (pressed == 1)
-                    model->pressed[model->lookup[row * model->cols + col]]= true;
-                else if (pressed == 0)
-                    model->pressed[model->lookup[row * model->cols + col]]= false;
+
+                pthread_mutex_lock(&shared->mutex);
+                model->pressed[model->lookup[row * model->cols + col]] = (pressed == 1);
+                pthread_mutex_unlock(&shared->mutex);
+
             } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
             {
+                pthread_mutex_lock(&shared->mutex);
                 shared->active_layer = buf[1];
-
+                pthread_mutex_unlock(&shared->mutex);
             }
         }
     }

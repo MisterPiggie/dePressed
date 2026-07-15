@@ -154,9 +154,8 @@ void render_main_screen(App *app)
     {
         KBS_key key = model.layout.keys[i];
 
-        SDL_Color color = app->shared.pressed[i] ? app->pressed_color : app->idle_color;
-        SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, 255);
-        SDL_RenderFillRect(app->renderer, &key.rect);
+        SDL_Texture *texture = app->shared.pressed[i] ? key.pressed_texture : key.idle_texture;
+        SDL_RenderTextureRotated(app->renderer, texture, NULL, &key.rect, key.angle, &key.center, SDL_FLIP_NONE);
     }
 }
 

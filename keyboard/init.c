@@ -188,35 +188,36 @@ bool KBS_connect_keyboard(App *app)
 
     KBS_get_bounds(app);
 
+    if (!KBS_start_key_listener(app))
+        assert(1);
+
     return true;
 }
-
 static void apply_offset(KBS_cursor *cursor, cJSON *item)
 {
     cJSON *v;
-    if ((v = cJSON_GetObjectItem(item, "x")))  
-        cursor->x += v->valuedouble;
-    if ((v = cJSON_GetObjectItem(item, "y")))  
-        cursor->y += v->valuedouble;
+    if ((v = cJSON_GetObjectItem(item, "r")))
+        cursor->rotation_angle = v->valuedouble;
 
-    if ((v = cJSON_GetObjectItem(item, "w")))  
-        cursor->width  = v->valuedouble;
-    if ((v = cJSON_GetObjectItem(item, "h")))  
-        cursor->height = v->valuedouble;
-
-    if ((v = cJSON_GetObjectItem(item, "r")))  
-        cursor->rotation_angle  = v->valuedouble;
-
-    if ((v = cJSON_GetObjectItem(item, "rx"))) 
-    { 
-        cursor->rotation_x = v->valuedouble; 
-        cursor->x = cursor->rotation_x; 
+    if ((v = cJSON_GetObjectItem(item, "rx")))
+    {
+        cursor->rotation_x = v->valuedouble;
+        cursor->x = cursor->rotation_x;
     }
-    if ((v = cJSON_GetObjectItem(item, "ry"))) 
+    if ((v = cJSON_GetObjectItem(item, "ry")))
     {
         cursor->rotation_y = v->valuedouble;
-        cursor->y = cursor->rotation_y; 
+        cursor->y = cursor->rotation_y;
     }
+
+    if ((v = cJSON_GetObjectItem(item, "x")))
+        cursor->x += v->valuedouble;
+    if ((v = cJSON_GetObjectItem(item, "y")))
+        cursor->y += v->valuedouble;
+    if ((v = cJSON_GetObjectItem(item, "w")))
+        cursor->width = v->valuedouble;
+    if ((v = cJSON_GetObjectItem(item, "h")))
+        cursor->height = v->valuedouble;
 }
 
 static void parse_row_col(const char *label, U8 *row, U8 *col)
@@ -280,10 +281,70 @@ static void KBS_get_bounds(App *app)
             px_w - px_pad, 
             px_h - px_pad,
         };
+
+        key->idle_texture = SDL_CreateTexture(app->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, key->rect.w, key->rect.h);
+        key->pressed_texture = SDL_CreateTexture(app->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, key->rect.w, key->rect.h);
+
+        SDL_SetRenderTarget(app->renderer, key->idle_texture);
+        SDL_SetRenderDrawColor(app->renderer, app->idle_color.r, app->idle_color.g, app->idle_color.b, 255);
+        SDL_RenderClear(app->renderer);
+
+        SDL_RenderFillRect(app->renderer, NULL);
+        SDL_SetRenderTarget(app->renderer, NULL);
+
+        SDL_SetRenderTarget(app->renderer, key->pressed_texture);
+        SDL_SetRenderDrawColor(app->renderer, app->pressed_color.r, app->pressed_color.g, app->pressed_color.b, 255);
+        SDL_RenderClear(app->renderer);
+
+        SDL_RenderFillRect(app->renderer, NULL);
+        SDL_SetRenderTarget(app->renderer, NULL);
+
+        SDL_FPoint center; 
+
+        F32 pivot_abs_x = (key->rx - min_x + MARGIN) * model->layout.scale + px_pad / 2.0f;
+        F32 pivot_abs_y = (key->ry - min_y + MARGIN) * model->layout.scale + px_pad / 2.0f;
+        key->center = (SDL_FPoint){
+            pivot_abs_x - key->rect.x,
+            pivot_abs_y - key->rect.y
+        };
+
+        printf("Keys data:\n X: %f Y: %f RX: %f RY: %f Angle: %f\n", key->x, key->y, key->rx, key->ry, key->angle);
+
+
     }
+
+    
 }
 
 static bool is_multiline_label(const char *label)
 {
     return strchr(label, '\n') != NULL;
+}
+
+void *KBS_key_listener_thread(void *arg)
+{
+    App_thread_arg *args = (App_thread_arg *)arg;
+    listen_for_keypresses(args->model, args->shared);
+    return NULL;
+}
+
+bool KBS_start_key_listener(App *app)
+{
+    if (pthread_mutex_init(&app->shared.mutex, NULL) != 0) return false;
+    atomic_init(&app->shared.running, true);
+    app->shared.active_layer = 0;
+
+    KBS_model *model = &app->keyboards[app->active_model_idx];
+
+    App_thread_arg *args = arena_push_struct(&app->arena, App_thread_arg);
+    args->model = model;
+    args->shared = &app->shared;
+
+    if (pthread_create(&app->key_listen_thread, NULL, KBS_key_listener_thread, args) != 0)
+    {
+        app->shared.pressed = NULL;
+        pthread_mutex_destroy(&app->shared.mutex);
+        return false;
+    }
+    return true;
 }

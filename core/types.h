@@ -25,6 +25,10 @@ typedef enum
 typedef struct 
 {
     SDL_FRect rect;
+    SDL_FPoint center;
+
+    SDL_Texture  *pressed_texture;
+    SDL_Texture  *idle_texture;
 
     F32       x;
     F32       y;
@@ -121,6 +125,12 @@ typedef struct
 
 typedef struct 
 {
+    App_shared *shared;
+    KBS_model  *model;
+} App_thread_arg;
+
+typedef struct 
+{
     Arena       arena;
 
     KBS_model   *keyboards;
@@ -146,6 +156,8 @@ typedef struct
     SDL_Color    idle_color;
     SDL_Color    pressed_color;
     SDL_Color    hover_color;
+
+    pthread_t    key_listen_thread;
 
     bool         running;
 } App;
