@@ -65,22 +65,13 @@ void init_buttons(App *app)
             .w = win_width * W_FRAC_DROP,
             .h = win_height * H_FRAC_DROP,
         },
+        .win_height = win_height,
+        .win_width = win_width,
         .is_open = 0,
         .selected_idx = -1
-
     };
+    app->dropdown.placeholder_texture = GUI_make_font_texture(app->font, app->renderer, "--No keyboards were found--", app->fg_color);
 
-    if (app->keyboards_count == 0)
-        app->dropdown.placeholder_texture = GUI_make_font_texture(app->font, app->renderer, "--No keyboards were found--", app->fg_color);
-    else if (app->keyboards_count > 1)
-        app->dropdown.placeholder_texture = GUI_make_font_texture(app->font, app->renderer, "--Choose your keyboard--", app->fg_color);
-    else 
-        app->dropdown.selected_idx = 0;
-
-    app->dropdown.options_texture = arena_push_array(&app->arena, SDL_Texture *, app->keyboards_count);
-
-    for (int i = 0; i < app->keyboards_count; i++)
-        app->dropdown.options_texture[i] = GUI_make_font_texture(app->font, app->renderer, app->keyboards[i].product_name, app->fg_color);
 
     app->drag_button = (GUI_button)
     {
@@ -126,28 +117,54 @@ void draw_button(App *app, GUI_button *button)
 
 void draw_dropdown(App *app, GUI_dropdown *dropdown)
 {
-    SDL_SetRenderDrawColor(app->renderer, app->idle_color.r, app->idle_color.g, app->idle_color.b, app->idle_color.a);
+    SDL_Color bg = dropdown->is_pressed ? app->pressed_color
+                 : dropdown->is_hovered ? app->hover_color : app->idle_color;
+
+    SDL_SetRenderDrawColor(app->renderer, bg.r, bg.g, bg.b, bg.a);
     SDL_RenderFillRect(app->renderer, &dropdown->rect);
 
-    if (dropdown->selected_idx == -1)
+    SDL_Texture *texture = (dropdown->selected_idx == -1) ? dropdown->placeholder_texture : dropdown->options_texture[dropdown->selected_idx];
+
+    F32 text_width, text_height;
+    SDL_GetTextureSize(texture, &text_width, &text_height);
+
+    SDL_FRect text_dest =
     {
-        F32 text_width;
-        F32 text_height;
+        dropdown->rect.x + (dropdown->rect.w - text_width) / 2.0f,
+        dropdown->rect.y + (dropdown->rect.h - text_height) / 2.0f,
+        text_width,
+        text_height,
+    };
 
-        SDL_GetTextureSize(dropdown->placeholder_texture, &text_width, &text_height);
+    if (dropdown->is_open)
+    {
 
-        SDL_FRect text_dest =
+        for (int i = 0; i < app->keyboards_count; i++)
         {
-            dropdown->rect.x + (dropdown->rect.w - text_width) / 2.0f,
-            dropdown->rect.y + (dropdown->rect.h - text_height) / 2.0f,
-            text_width,
-            text_height,
-        };
+            GUI_dropdown_link *link = &dropdown->link[i];
+            SDL_Color bg = link->is_hovered ? app->hover_color : app->idle_color;
 
-        SDL_RenderTexture(app->renderer, dropdown->placeholder_texture, NULL, &text_dest);
+            SDL_SetRenderDrawColor(app->renderer, bg.r, bg.g, bg.b, bg.a);
+            SDL_RenderFillRect(app->renderer, &link->rect);
+
+            if (dropdown->options_texture[i])
+            {
+                F32 text_width;
+                F32 text_height;
+
+                SDL_GetTextureSize(dropdown->options_texture[i], &text_width, &text_height);
+
+                SDL_FRect text_dest =
+                {
+                    link->rect.x + (link->rect.w - text_width) / 2.0f,
+                    link->rect.y + (link->rect.h - text_height) / 2.0f,
+                    text_width,
+                    text_height,
+                };
+
+                SDL_RenderTexture(app->renderer, dropdown->options_texture[i], NULL, &text_dest);
+            }
+        }
     }
+    SDL_RenderTexture(app->renderer, texture, NULL, &text_dest);
 }
- 
-
-
-

@@ -31,13 +31,13 @@ int main(void)
     app.hover_color = (SDL_Color){ 98, 93, 115, 255 };
     app.pressed_color = (SDL_Color){ 89, 75, 160, 255 };
 
-    HID_get_suitable_keyboards(&app);
-
     init_buttons(&app);
 
     SDL_SetWindowHitTest(app.window, GUI_drag, &app);
 
     app.running = 1;
+
+    HID_get_suitable_keyboards(&app);
 
     while (app.running)
     {

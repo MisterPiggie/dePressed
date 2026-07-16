@@ -50,6 +50,15 @@ void handle_setup_events(App *app, SDL_Event *event)
     F32 mouse_y = event->button.y;
     if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN && event->button.button == SDL_BUTTON_LEFT)
     {
+        if (app->dropdown.is_open)
+        {
+            for (int i = 0; i < app->keyboards_count; i++)
+            {
+                if (point_in_rect(mouse_x, mouse_y, &app->dropdown.link[i].rect))
+                    app->dropdown.selected_idx = app->dropdown.link[i].idx;
+            }
+            app->dropdown.is_open = false;
+        }
         if (point_in_rect(mouse_x, mouse_y, &app->ok_button.rect))
             app->ok_button.is_pressed = true;
         if (point_in_rect(mouse_x, mouse_y, &app->exit_button.rect))
@@ -57,7 +66,7 @@ void handle_setup_events(App *app, SDL_Event *event)
         if (point_in_rect(mouse_x, mouse_y, &app->reload_button.rect))
             app->reload_button.is_pressed = true;
         if (point_in_rect(mouse_x, mouse_y, &app->dropdown.rect))
-            app->dropdown.is_open = true;
+            app->dropdown.is_pressed = true;
 
     }
 
@@ -72,12 +81,17 @@ void handle_setup_events(App *app, SDL_Event *event)
                     app->active_model_idx = app->dropdown.selected_idx;
                     if (!KBS_connect_keyboard(app))
                     {
-                        SDL_Event quit_event;
-                        quit_event.type = SDL_EVENT_QUIT;
-                        SDL_PushEvent(&quit_event);
+                        if (app->active_model_idx != -1)
+                            KBS_disconnect_keyboard(app);
+
+                        arena_rewind(&app->arena);
+                        app->keyboards_count = 0;
+                        app->active_model_idx = -1;
+                        HID_get_suitable_keyboards(app);
                     }
-                }
-                app->current_screen = SCREEN_MAIN;
+                } 
+                if (app->active_model_idx != -1)
+                    app->current_screen = SCREEN_MAIN;
             }
         }
 
@@ -93,18 +107,33 @@ void handle_setup_events(App *app, SDL_Event *event)
 
         if (point_in_rect(mouse_x, mouse_y, &app->reload_button.rect))
         {
+            if (app->active_model_idx != -1)
+                KBS_disconnect_keyboard(app);
+
             arena_rewind(&app->arena);
+            app->keyboards_count = 0;
+            app->active_model_idx = -1;
             HID_get_suitable_keyboards(app);
-            app->dropdown.options_texture = arena_push_array(&app->arena, SDL_Texture *, app->keyboards_count);
         }
         app->reload_button.is_pressed = false;
+
+        if (point_in_rect(mouse_x, mouse_y, &app->dropdown.rect))
+        {
+            app->dropdown.is_open = true;
+        }
+        app->dropdown.is_pressed = false;
     }
 
     if (event->type == SDL_EVENT_MOUSE_MOTION)
     {
+        if (app->dropdown.is_open)
+            for (int i = 0; i < app->keyboards_count; i++)
+                app->dropdown.link[i].is_hovered = point_in_rect(mouse_x, mouse_y, &app->dropdown.link[i].rect);
+
         app->ok_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->ok_button.rect);
         app->exit_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->exit_button.rect);
         app->reload_button.is_hovered = point_in_rect(mouse_x, mouse_y, &app->reload_button.rect);
+        app->dropdown.is_hovered = point_in_rect(mouse_x, mouse_y, &app->dropdown.rect);
     }
 }
 
@@ -124,7 +153,21 @@ void handle_event(App *app, SDL_Event *event)
 
     if (event->type == SDL_EVENT_KEY_DOWN && event->key.key == SDLK_ESCAPE)
     {
-        app->current_screen = app->current_screen == SCREEN_MAIN ? SCREEN_SETUP : SCREEN_MAIN;
+        if (app->current_screen == SCREEN_MAIN)
+            app->current_screen = SCREEN_SETUP;
+        else 
+        {
+            if (app->dropdown.selected_idx >= 0)
+            {
+                if (app->active_model_idx != app->dropdown.selected_idx)
+                {
+                    app->active_model_idx = app->dropdown.selected_idx;
+                    KBS_connect_keyboard(app);
+                } 
+                app->current_screen = SCREEN_MAIN;
+            }
+        }
+
         return;
     }
 
@@ -149,6 +192,8 @@ void render_setup_screen(App *app)
 
 void render_main_screen(App *app)
 {
+    if (app->keyboards_count == 0)
+        return;
     KBS_model model = app->keyboards[app->active_model_idx];
     for (int i = 0; i < model.layout.key_count; i++)
     {

@@ -308,7 +308,6 @@ static void KBS_get_bounds(App *app)
             pivot_abs_y - key->rect.y
         };
 
-        printf("Keys data:\n X: %f Y: %f RX: %f RY: %f Angle: %f\n", key->x, key->y, key->rx, key->ry, key->angle);
 
 
     }
@@ -342,9 +341,42 @@ bool KBS_start_key_listener(App *app)
 
     if (pthread_create(&app->key_listen_thread, NULL, KBS_key_listener_thread, args) != 0)
     {
+        atomic_store(&app->shared.running, false);
         app->shared.pressed = NULL;
         pthread_mutex_destroy(&app->shared.mutex);
         return false;
     }
     return true;
+}
+
+void KBS_disconnect_keyboard(App *app)
+{
+    KBS_model *model = &app->keyboards[app->active_model_idx];
+
+    if (atomic_load(&app->shared.running))
+    {
+        atomic_store(&app->shared.running, false);
+        pthread_join(app->key_listen_thread, NULL);
+        pthread_mutex_destroy(&app->shared.mutex);
+    }
+    app->shared.pressed = NULL;
+
+    hid_close(model->device);
+    model->device = NULL;
+
+    if (model->layout.keys)
+    {
+        for (int i = 0; i < model->layout.key_count; i++)
+        {
+            if (model->layout.keys[i].idle_texture)    
+                SDL_DestroyTexture(model->layout.keys[i].idle_texture);
+            if (model->layout.keys[i].pressed_texture) 
+                SDL_DestroyTexture(model->layout.keys[i].pressed_texture);
+        }
+    }
+
+    model->layout.keys = NULL;
+    model->layout.key_count = 0;
+    model->lookup = NULL;
+    model->pressed = NULL;
 }

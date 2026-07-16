@@ -103,14 +103,29 @@ typedef struct
     bool        is_pressed;
 } GUI_button;
 
+typedef struct 
+{
+    SDL_FRect   rect;
+
+    bool        is_hovered;
+    U8          idx;
+} GUI_dropdown_link;
 
 typedef struct
 {
+    GUI_dropdown_link *link;
+
     SDL_FRect   rect;
-    bool        is_open;
 
     SDL_Texture **options_texture;
     SDL_Texture *placeholder_texture;
+
+    S32         win_width;
+    S32         win_height;
+
+    bool        is_open;
+    bool        is_pressed;
+    bool        is_hovered;
 
     S8          selected_idx;
 } GUI_dropdown;

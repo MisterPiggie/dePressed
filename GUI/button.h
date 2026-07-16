@@ -9,11 +9,11 @@
 
 
 #define X_FRAC_OK  0.1f 
-#define Y_FRAC_OK  0.8f  
+#define Y_FRAC_OK  0.3f  
 #define W_FRAC_OK  0.3f  
 #define H_FRAC_OK  0.1f  
 
-#define X_FRAC_EXIT  0.6f 
+#define X_FRAC_EXIT  0.1f 
 #define Y_FRAC_EXIT  0.8f  
 #define W_FRAC_EXIT  0.3f  
 #define H_FRAC_EXIT  0.1f   
