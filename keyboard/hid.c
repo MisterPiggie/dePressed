@@ -92,7 +92,7 @@ bool HID_open_device(KBS_model *model)
     return model->connected;
 }
 
-void listen_for_keypresses(KBS_model *model, App_shared *shared)
+void HID_listen_for_keypresses(KBS_model *model, App_shared *shared)
 {
     U8 buf[RAW_HID_PACKET_SIZE];
 
@@ -112,8 +112,9 @@ void listen_for_keypresses(KBS_model *model, App_shared *shared)
 
             } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
             {
+                U32 active_layers = (U32)buf[1] | ((U32)buf[2] << 8) | ((U32)buf[3] << 16) | ((U32)buf[4] << 24);
                 pthread_mutex_lock(&shared->mutex);
-                shared->active_layer = buf[1];
+                shared->active_layers = active_layers;
                 pthread_mutex_unlock(&shared->mutex);
             }
         }

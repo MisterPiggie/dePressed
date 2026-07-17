@@ -18,8 +18,8 @@ SDL_Window *GUI_create_window(void)
     U32 screen_width = mode->w;
     U32 screen_height = mode->h;
 
-    F32 scale_width = 0.3f;
-    F32 scale_height = 0.2f;
+    F32 scale_width = 0.5f;
+    F32 scale_height = 0.3f;
 
     U32 window_width = (U32)screen_width * scale_width;
     U32 window_height = (U32)screen_height * scale_height;
@@ -194,13 +194,26 @@ void render_main_screen(App *app)
 {
     if (app->keyboards_count == 0)
         return;
-    KBS_model model = app->keyboards[app->active_model_idx];
-    for (int i = 0; i < model.layout.key_count; i++)
-    {
-        KBS_key key = model.layout.keys[i];
 
-        SDL_Texture *texture = app->shared.pressed[i] ? key.pressed_texture : key.idle_texture;
-        SDL_RenderTextureRotated(app->renderer, texture, NULL, &key.rect, key.angle, &key.center, SDL_FLIP_NONE);
+    KBS_model *model = &app->keyboards[app->active_model_idx];  
+
+    for (int i = 0; i < model->layout.key_count; i++)
+    {
+        KBS_key *key = &model->layout.keys[i];  
+
+        SDL_Texture *bg_texture = app->shared.pressed[i] ? key->pressed_texture : key->idle_texture;
+        if (app->shared.pressed[i])
+        {
+            printf("Key row: %d col: %d\nKey codes:\n", key->row, key->col);
+            for (int j = 0; j < model->layers_count; j++)
+                printf("%04x\n ", key->code[j]);
+            printf("\n");
+        }
+        SDL_RenderTextureRotated(app->renderer, bg_texture, NULL, &key->rect, key->angle, &key->center, SDL_FLIP_NONE);
+
+        S8 layer_idx = KBS_resolve_layer(key, app->shared.active_layers);
+
+        SDL_RenderTextureRotated(app->renderer, key->code_textures[layer_idx], NULL, &key->code_text_rects[layer_idx], key->angle, &key->center, SDL_FLIP_NONE);
     }
 }
 

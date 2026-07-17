@@ -30,6 +30,10 @@ typedef struct
     SDL_Texture  *pressed_texture;
     SDL_Texture  *idle_texture;
 
+    SDL_Texture  **code_textures;
+
+    SDL_FRect    *code_text_rects;
+
     F32       x;
     F32       y;
 
@@ -133,7 +137,7 @@ typedef struct
 typedef struct 
 {
     pthread_mutex_t mutex;
-    U8              active_layer;
+    U32             active_layers;
     bool            *pressed;
     atomic_bool     running;
 } App_shared;

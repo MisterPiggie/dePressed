@@ -12,3 +12,4 @@ static bool is_multiline_label(const char *label);
 void *KBS_key_listener_thread(void *arg);
 bool KBS_start_key_listener(App *app);
 void KBS_disconnect_keyboard(App *app);
+S8 KBS_resolve_layer(KBS_key *key, U32 layer_state);

@@ -2,6 +2,7 @@
 #include "keyboard/hid.h"
 #include "keyboard/init.h"
 #include "keyboard/decode.h"
+#include "GUI/font.h"
 #include <float.h>
 #include <SDL3/SDL.h>
 #include <math.h>
@@ -84,7 +85,7 @@ bool KBS_connect_keyboard(App *app)
 
     model->rows = rows->valueint;
     model->cols = cols->valueint;
-    model->layout.key_count = model->rows * model->cols;
+  
 
     cJSON *json_layouts = cJSON_GetObjectItemCaseSensitive(json, "layouts");
     if (!cJSON_IsObject(json_layouts))
@@ -100,7 +101,7 @@ bool KBS_connect_keyboard(App *app)
         return false;
     }
 
-    model->layout.keys = arena_push_array(&model->arena, KBS_key, model->layout.key_count);
+    model->layout.keys = arena_push_array(&model->arena, KBS_key,  model->rows * model->cols);
 
     KBS_cursor cursor = {0};
     cursor.y = -1;
@@ -153,6 +154,8 @@ bool KBS_connect_keyboard(App *app)
         }
     }
 
+    model->layout.key_count = key_idx;
+
     cJSON_Delete(json);
 
 
@@ -165,6 +168,11 @@ bool KBS_connect_keyboard(App *app)
         return false;
     }
 
+    for (int i = 0; i < keymap_size; i++)
+        printf("%02x", keymap_buf[i]);
+
+    printf("\n");
+
     model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
     model->pressed = arena_push_array_zero(&model->arena, bool, model->layout.key_count);
     app->shared.pressed = model->pressed;
@@ -173,6 +181,8 @@ bool KBS_connect_keyboard(App *app)
     {
         KBS_key *key = &model->layout.keys[i];
         key->code = arena_push_array(&model->arena, U16, model->layers_count);
+        key->code_textures = arena_push_array(&model->arena, SDL_Texture *, model->layers_count);
+        key->code_text_rects = arena_push_array(&model->arena, SDL_FRect, model->layers_count);
 
 
         for (int j = 0; j < model->layers_count; j++)
@@ -308,8 +318,24 @@ static void KBS_get_bounds(App *app)
             pivot_abs_y - key->rect.y
         };
 
+        for (int j = 0; j < model->layers_count; j++)
+        {
+            if (key->code[j] == 0x0001 || key->code[j] == 0x0000)
+                continue;
+            char keycode_stirng_buf[16];
+            const char *keycode_string = decode_keycode(key->code[j], keycode_stirng_buf, 16);
+            key->code_textures[j] = GUI_make_font_texture(app->font, app->renderer, keycode_string, app->fg_color);
 
+            float text_width, text_height;
+            SDL_GetTextureSize(key->code_textures[j], &text_width, &text_height);
 
+            key->code_text_rects[j] = (SDL_FRect){
+                key->rect.x + (key->rect.w - text_width) / 2.0f,
+                key->rect.y + (key->rect.h - text_height) / 2.0f,
+                text_width,
+                text_height
+            };
+        }
     }
 
     
@@ -323,7 +349,7 @@ static bool is_multiline_label(const char *label)
 void *KBS_key_listener_thread(void *arg)
 {
     App_thread_arg *args = (App_thread_arg *)arg;
-    listen_for_keypresses(args->model, args->shared);
+    HID_listen_for_keypresses(args->model, args->shared);
     return NULL;
 }
 
@@ -331,7 +357,7 @@ bool KBS_start_key_listener(App *app)
 {
     if (pthread_mutex_init(&app->shared.mutex, NULL) != 0) return false;
     atomic_init(&app->shared.running, true);
-    app->shared.active_layer = 0;
+    app->shared.active_layers = 1;
 
     KBS_model *model = &app->keyboards[app->active_model_idx];
 
@@ -379,4 +405,16 @@ void KBS_disconnect_keyboard(App *app)
     model->layout.key_count = 0;
     model->lookup = NULL;
     model->pressed = NULL;
+}
+
+S8 KBS_resolve_layer(KBS_key *key, U32 active_layers)
+{
+    while (active_layers != 0)
+    {
+        int layer = 31 - __builtin_clz(active_layers);
+        if (key->code[layer] != 0x0001)
+            return layer;
+        active_layers &= ~(1u << layer);   
+    }
+    return 0;
 }
