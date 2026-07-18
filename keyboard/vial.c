@@ -69,10 +69,8 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
     }
 
     if (!is_valid)
-    {
-        printf("Not valid\n");
         return false;
-    }
+
     return true;
 }
 
@@ -280,12 +278,9 @@ bool VIAL_get_keymap(KBS_model *model, U8 *keymap_buf, U32 keymap_size)
         }
 
         if (!is_valid)
-        {
-            printf("Keymap failed\n");
             return false;
-        }
 
-        memcpy(keymap_buf + offset, resp + 5, chunk_size);
+        memcpy(keymap_buf + offset, resp + 4, chunk_size);
         offset += chunk_size;
     }
     return true;

@@ -1,8 +1,9 @@
 #include <lzma.h>
 #include <stdlib.h>
 #include "keyboard/decode.h"
+#include "GUI/error.h"
 
-U8 *XZ_decode(const U8 *input, U32 input_len, U32 *out_len)
+U8 *XZ_decode(App *app, const U8 *input, U32 input_len, U32 *out_len)
 {
     U32 out_cap = input_len * 20; 
     U64 memlimit = UINT64_MAX;
@@ -10,7 +11,7 @@ U8 *XZ_decode(const U8 *input, U32 input_len, U32 *out_len)
     U8 *out_buf = malloc(out_cap);
     if (!out_buf)
     {
-        printf("malloc\n");
+        GUI_create_an_error(app, ": not enough memory for decompression");
         return NULL;
     }
 
@@ -23,7 +24,11 @@ U8 *XZ_decode(const U8 *input, U32 input_len, U32 *out_len)
     if (ret != LZMA_OK) 
     {
         free(out_buf);
-        printf("LZMA_ERROR code %d\n", ret);
+
+        char lzma_err[50];        
+        sprintf(lzma_err, ": LZMA_ERROR code: %d", ret);
+
+        GUI_create_an_error(app, lzma_err);
         return NULL;
     }
 
@@ -89,6 +94,8 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         basic[0x7C]="Copy",  basic[0x7D]="Paste", basic[0x7E]="Find",  basic[0x7F]="Mute",
         basic[0x80]="VolUp", basic[0x81]="VolDn",
 
+        basic[0x82]="LockCL", basic[0x83]="LockNL", basic[0x84]="LockSL",
+
         basic[0x85]="P,",    
         basic[0x87]="INT1",  basic[0x88]="INT2",  basic[0x89]="INT3",  basic[0x8A]="INT4",
         basic[0x8B]="INT5",  basic[0x8C]="INT6",  basic[0x8D]="INT7",  basic[0x8E]="INT8",
@@ -96,32 +103,89 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         basic[0x93]="LNG4",  basic[0x94]="LNG5",  basic[0x95]="LNG6",  basic[0x96]="LNG7",
         basic[0x97]="LNG8",  basic[0x98]="LNG9",
 
-        basic[0xE0]="LCtrl", basic[0xE1]="LShift", basic[0xE2]="LAlt", basic[0xE3]="LGui",
-        basic[0xE4]="RCtrl", basic[0xE5]="RShift", basic[0xE6]="RAlt", basic[0xE7]="RGui";
+        basic[0x99]="Eras", basic[0x9A]="Req", basic[0x9B]="Cancel", basic[0x9C]="Clear", basic[0x9D]="Prior", 
+        basic[0x9E]="Return", basic[0x9F]="Separ", basic[0xA0]="Out", basic[0xA1]="Oper", basic[0xA2]="ClearA", 
+        basic[0xA3]="CrSel", basic[0xA4]="ExSel", basic[0xA5]="Power", basic[0xA6]="Sleep", basic[0xA7]="Wake", 
+        basic[0xA8]="Mute", basic[0xA9]="VolUp", basic[0xAA]="VolDn", basic[0xAB]="NextTr", basic[0xAC]="PrevTr", 
+        basic[0xAD]="Stop", basic[0xAE]="Pause", basic[0xAF]="Select", basic[0xB0]="Eject", basic[0xB1]="Mail", 
+        basic[0xB2]="Calc", basic[0xB3]="MyPC", 
+
+
+        basic[0xB4]="WSearch", basic[0xB5]="WHome", basic[0xB6]="WBack", basic[0xB7]="WFor", basic[0xB8]="WStop", 
+        basic[0xB9]="WRefr", basic[0xBA]="WFav", basic[0xBB]="FFov", basic[0xBC]="Rewind", basic[0xBD]="BrghUp", 
+        basic[0xBE]="BrghDn", basic[0xBF]="CtrlPn", basic[0xC0]="Assist", basic[0xC1]="MsCtrl", basic[0xC2]="LnPad", 
+
+        basic[0xCD]="MsUp", basic[0xCE]="MsDn", basic[0xCF]="MsLft", basic[0xD0]="MsRght", basic[0xD1]="MsBt1", 
+        basic[0xD2]="MsBt2", basic[0xD3]="MsBt3", basic[0xD4]="MsBt4", basic[0xD5]="MsBt5", basic[0xD6]="MsBt6", 
+        basic[0xD7]="MsBt7", basic[0xD8]="MsBt8", basic[0xD9]="MsWhUp", basic[0xDA]="MsWhDn", basic[0xDB]="MsWhLf", 
+        basic[0xD7]="MsBt7", basic[0xD8]="MsBt8", basic[0xD9]="MsWhUp", basic[0xDA]="MsWhDn", basic[0xDB]="MsWhLf", 
+        basic[0xDC]="MsWhRt", basic[0xDD]="MsAc0", basic[0xDE]="MsAc1", basic[0xDF]="MsAc2", 
+
+        basic[0xE0]="LCtrl", basic[0xE1]="Shift", basic[0xE2]="LAlt", basic[0xE3]="LGui",
+        basic[0xE4]="RCtrl", basic[0xE5]="Shift", basic[0xE6]="RAlt", basic[0xE7]="RGui";
     }
+
     if (kc < 256 && basic[kc])
         return basic[kc];
+
+    if (kc >= 0x0100 && kc <= 0x1FFF)
+    {
+        U8 mods = (kc >> 8) & 0x1F;
+        U8 base_kc = kc & 0xFF;
+
+        if (mods == 0x02 || mods == 0x12)  
+        {
+            const char *symbol = shifted_symbol(base_kc);
+            if (symbol) 
+                return symbol;   
+        }
+
+        if (!basic[base_kc])
+        {
+            snprintf(buf, buf_size, "OSL(%d)", kc - 0x5280);
+            return buf;
+        }
+
+        bool is_right = (mods & 0x10) != 0;
+        char mod_str[16] = "";
+
+        if (mods & 0x01) 
+            strcat(mod_str, is_right ? "RC-" : "LC-");
+        if (mods & 0x02) 
+            strcat(mod_str, is_right ? "RS-" : "LS-");
+        if (mods & 0x04) 
+            strcat(mod_str, is_right ? "RA-" : "LA-");
+        if (mods & 0x08) 
+            strcat(mod_str, is_right ? "RG-" : "LG-");
+
+        snprintf(buf, buf_size, "%s%s", mod_str, basic[base_kc]);
+        return buf;
+    }
 
     if (kc >= 0x5220 && kc <= 0x523F) 
     { 
         snprintf(buf, buf_size, "MO(%d)", kc - 0x5220);
         return buf; 
     }
+
     if (kc >= 0x5200 && kc <= 0x521F) 
     {
         snprintf(buf, buf_size, "TO(%d)", kc - 0x5200);
         return buf;
     }
+
     if (kc >= 0x5240 && kc <= 0x525F) 
     {
         snprintf(buf, buf_size, "DF(%d)", kc - 0x5240);
         return buf;
     }
+
     if (kc >= 0x5260 && kc <= 0x527F) 
     {
         snprintf(buf, buf_size, "TG(%d)", kc - 0x5260);
         return buf;
     }
+
     if (kc >= 0x5280 && kc <= 0x529F) 
     {
         snprintf(buf, buf_size, "OSL(%d)", kc - 0x5280);
@@ -130,4 +194,55 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
 
     snprintf(buf, buf_size, "0x%04X", kc);
     return buf;
+}
+
+static const char *shifted_symbol(U8 base_kc)
+{
+    switch (base_kc)
+    {
+        case 0x1E: 
+            return "!";  
+        case 0x1F: 
+            return "@";  
+        case 0x20: 
+            return "#";  
+        case 0x21: 
+            return "$";  
+        case 0x22: 
+            return "%";  
+        case 0x23: 
+            return "^";  
+        case 0x24: 
+            return "&"; 
+        case 0x25: 
+            return "*";
+        case 0x26: 
+            return "(";  
+        case 0x27: 
+            return ")"; 
+        case 0x2D: 
+            return "_";
+        case 0x2E: 
+            return "+"; 
+        case 0x2F: 
+            return "{";
+        case 0x30: 
+            return "}";  
+        case 0x31: 
+            return "|";  
+        case 0x33: 
+            return ":";  
+        case 0x34: 
+            return "\""; 
+        case 0x35: 
+            return "~";  
+        case 0x36: 
+            return "<";  
+        case 0x37: 
+            return ">";  
+        case 0x38: 
+            return "?";  
+        default: 
+            return NULL;   
+    }
 }

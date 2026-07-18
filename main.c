@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "core/types.h"
 #include "GUI/window.h"
+#include "GUI/error.h"
 #include "GUI/button.h"
 #include "GUI/hit_test.h"
 #include "GUI/font.h"
@@ -47,5 +48,7 @@ int main(void)
 
         render_frame(&app);          
     }
+
+    app_exit(&app);
 }
 

@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include "window.h"
+#include "error.h"
 #include "button.h"
 #include "keyboard/hid.h"
 #include "hit_test.h"
@@ -118,9 +119,8 @@ void handle_setup_events(App *app, SDL_Event *event)
         app->reload_button.is_pressed = false;
 
         if (point_in_rect(mouse_x, mouse_y, &app->dropdown.rect))
-        {
             app->dropdown.is_open = true;
-        }
+
         app->dropdown.is_pressed = false;
     }
 
@@ -184,6 +184,7 @@ void handle_event(App *app, SDL_Event *event)
 
 void render_setup_screen(App *app)
 {
+    render_error(app);
     draw_dropdown(app, &app->dropdown);
     draw_button(app, &app->ok_button);
     draw_button(app, &app->exit_button);
@@ -202,18 +203,12 @@ void render_main_screen(App *app)
         KBS_key *key = &model->layout.keys[i];  
 
         SDL_Texture *bg_texture = app->shared.pressed[i] ? key->pressed_texture : key->idle_texture;
-        if (app->shared.pressed[i])
-        {
-            printf("Key row: %d col: %d\nKey codes:\n", key->row, key->col);
-            for (int j = 0; j < model->layers_count; j++)
-                printf("%04x\n ", key->code[j]);
-            printf("\n");
-        }
+
         SDL_RenderTextureRotated(app->renderer, bg_texture, NULL, &key->rect, key->angle, &key->center, SDL_FLIP_NONE);
 
         S8 layer_idx = KBS_resolve_layer(key, app->shared.active_layers);
 
-        SDL_RenderTextureRotated(app->renderer, key->code_textures[layer_idx], NULL, &key->code_text_rects[layer_idx], key->angle, &key->center, SDL_FLIP_NONE);
+        SDL_RenderTextureRotated(app->renderer, key->code_textures[layer_idx], NULL, &key->code_text_rects[layer_idx], key->angle, &key->code_text_centers[layer_idx], SDL_FLIP_NONE);
     }
 }
 

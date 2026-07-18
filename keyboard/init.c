@@ -3,9 +3,11 @@
 #include "keyboard/init.h"
 #include "keyboard/decode.h"
 #include "GUI/font.h"
+#include "GUI/error.h"
 #include <float.h>
 #include <SDL3/SDL.h>
 #include <math.h>
+#include <stdlib.h>
 
 bool KBS_connect_keyboard(App *app)
 {
@@ -17,22 +19,25 @@ bool KBS_connect_keyboard(App *app)
 
     if (!HID_open_device(model))
     {
-        printf("failed open\n");
+        GUI_create_an_error(app, ": failed to open device");
         return false;
     }
+
     if (!VIA_confirm_protocol_version(model))
     {
-        printf("failed protocol\n");
+        GUI_create_an_error(app, ": failed protocol check");
         return false;
     }
+
     if (!VIA_get_layers_count(model))
     {
-        printf("failed layers count\n");
+        GUI_create_an_error(app, ": failed to retrive layers count");
         return false;
     }
+
     if (!VIAL_enabled(model))
     {
-        printf("failed enabled\n");
+        GUI_create_an_error(app, ": not a VIAL keyboard");
         return false;
     }
 
@@ -40,46 +45,49 @@ bool KBS_connect_keyboard(App *app)
 
     if (!VIAL_get_def_size(model, &def_size))
     {
-        printf("failed get size\n");
+        GUI_create_an_error(app, ": failed to retrive definition size");
         return false;
     }
 
     U8 def_compressed[def_size];
 
     if (!VIAL_get_def(model, def_compressed, def_size))
-    { printf("failed def\n");
+    { 
+        GUI_create_an_error(app, ": failed to retrive definition");
         return false;
     }
 
-    decompressed_json = XZ_decode(def_compressed, def_size, &json_size);
+    decompressed_json = XZ_decode(app, def_compressed, def_size, &json_size);
     if (!decompressed_json) 
         return false;
 
     cJSON *json = JSON_parse_buffer(decompressed_json, json_size);
     if (!json)
     {
-        printf("JSON\n");
+        GUI_create_an_error(app, ": failed to parse vial.json");
         return false;
     }
+
+    free(decompressed_json);
 
     cJSON *matrix = cJSON_GetObjectItemCaseSensitive(json, "matrix");
     if(!cJSON_IsObject(matrix))
     {
-        printf("matrix\n");
+        GUI_create_an_error(app, ": vial.json doesnt have essential field \"matrix\"");
         return false;
     }
     
     cJSON *rows = cJSON_GetObjectItemCaseSensitive(matrix, "rows");
     if (!cJSON_IsNumber(rows))
     {
-        printf("rows\n");
+        GUI_create_an_error(app, ": vial.json doesnt have essential field \"rows\"");
         return false;
     }
 
     cJSON *cols = cJSON_GetObjectItemCaseSensitive(matrix, "cols");
     if (!cJSON_IsNumber(cols))
     {
-        printf("cols\n");
+        GUI_create_an_error(app, ": vial.json doesnt have essential field \"cols\"");
         return false;
     }
 
@@ -90,14 +98,14 @@ bool KBS_connect_keyboard(App *app)
     cJSON *json_layouts = cJSON_GetObjectItemCaseSensitive(json, "layouts");
     if (!cJSON_IsObject(json_layouts))
     {
-        printf("json layouts\n");
+        GUI_create_an_error(app, ": vial.json doesnt have essential field \"layouts\"");
         return false;
     }
 
     cJSON *json_keymap = cJSON_GetObjectItemCaseSensitive(json_layouts, "keymap");
     if (!cJSON_IsArray(json_keymap))
     {
-        printf("json keymap\n");
+        GUI_create_an_error(app, ": vial.json doesnt have essential field \"keymap\"");
         return false;
     }
 
@@ -161,17 +169,13 @@ bool KBS_connect_keyboard(App *app)
 
     U32 keymap_size = model->layers_count * model->rows * model->cols * 2;
     U8 keymap_buf[keymap_size];
+    memset(keymap_buf, 0, keymap_size);
 
     if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
     {
-        printf("Keymap fail\n");
+        GUI_create_an_error(app, ": failed to retrive VIAL keymap");
         return false;
     }
-
-    for (int i = 0; i < keymap_size; i++)
-        printf("%02x", keymap_buf[i]);
-
-    printf("\n");
 
     model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
     model->pressed = arena_push_array_zero(&model->arena, bool, model->layout.key_count);
@@ -183,13 +187,14 @@ bool KBS_connect_keyboard(App *app)
         key->code = arena_push_array(&model->arena, U16, model->layers_count);
         key->code_textures = arena_push_array(&model->arena, SDL_Texture *, model->layers_count);
         key->code_text_rects = arena_push_array(&model->arena, SDL_FRect, model->layers_count);
+        key->code_text_centers = arena_push_array(&model->arena, SDL_FPoint, model->layers_count);
 
 
         for (int j = 0; j < model->layers_count; j++)
         {
             U32 slot_idx = key->row * model->cols + key->col + (model->rows * model->cols) * j;
             U32 byte_idx = slot_idx * 2;
-            key->code[j] = keymap_buf[byte_idx] | (keymap_buf[byte_idx + 1] << 8);
+            key->code[j] = (keymap_buf[byte_idx]<< 8) | keymap_buf[byte_idx + 1];
         }
 
         U8 slot = key->row * model->cols + key->col;
@@ -326,7 +331,8 @@ static void KBS_get_bounds(App *app)
             const char *keycode_string = decode_keycode(key->code[j], keycode_stirng_buf, 16);
             key->code_textures[j] = GUI_make_font_texture(app->font, app->renderer, keycode_string, app->fg_color);
 
-            float text_width, text_height;
+            F32 text_width, text_height;
+
             SDL_GetTextureSize(key->code_textures[j], &text_width, &text_height);
 
             key->code_text_rects[j] = (SDL_FRect){
@@ -334,6 +340,11 @@ static void KBS_get_bounds(App *app)
                 key->rect.y + (key->rect.h - text_height) / 2.0f,
                 text_width,
                 text_height
+            };
+
+            key->code_text_centers[j] = (SDL_FPoint){
+                key->center.x - (key->code_text_rects[j].x - key->rect.x),
+                key->center.y - (key->code_text_rects[j].y - key->rect.y),
             };
         }
     }
@@ -398,6 +409,9 @@ void KBS_disconnect_keyboard(App *app)
                 SDL_DestroyTexture(model->layout.keys[i].idle_texture);
             if (model->layout.keys[i].pressed_texture) 
                 SDL_DestroyTexture(model->layout.keys[i].pressed_texture);
+            for (int layers = 0; layers < model->layers_count; layers++)
+                if (model->layout.keys[i].code_textures[layers]) 
+                    SDL_DestroyTexture(model->layout.keys[i].code_textures[layers]);
         }
     }
 
@@ -405,6 +419,7 @@ void KBS_disconnect_keyboard(App *app)
     model->layout.key_count = 0;
     model->lookup = NULL;
     model->pressed = NULL;
+    arena_destroy(&model->arena);
 }
 
 S8 KBS_resolve_layer(KBS_key *key, U32 active_layers)
@@ -417,4 +432,26 @@ S8 KBS_resolve_layer(KBS_key *key, U32 active_layers)
         active_layers &= ~(1u << layer);   
     }
     return 0;
+}
+
+void app_exit(App *app)
+{
+    if (app->active_model_idx != -1)
+        KBS_disconnect_keyboard(app);
+
+    SDL_DestroyTexture(app->ok_button.text_texture);
+    SDL_DestroyTexture(app->exit_button.text_texture);
+    SDL_DestroyTexture(app->reload_button.text_texture);
+    SDL_DestroyTexture(app->dropdown.placeholder_texture);
+    SDL_DestroyTexture(app->error_texture);
+
+    for (int i = 0; i < app->keyboards_count; i++)
+        SDL_DestroyTexture(app->dropdown.options_texture[i]);
+
+
+    SDL_DestroyWindow(app->window);
+    SDL_DestroyRenderer(app->renderer);
+    TTF_CloseFont(app->font);
+
+    arena_destroy(&app->arena);
 }

@@ -33,6 +33,7 @@ typedef struct
     SDL_Texture  **code_textures;
 
     SDL_FRect    *code_text_rects;
+    SDL_FPoint   *code_text_centers;
 
     F32       x;
     F32       y;
@@ -153,7 +154,11 @@ typedef struct
     Arena       arena;
 
     KBS_model   *keyboards;
-    U8          keyboards_count;
+
+    SDL_Texture  *error_texture;
+    SDL_FRect    error_rect;
+    U64          errored_at_time;
+
 
     S16         active_model_idx;
     App_shared  shared;
@@ -168,7 +173,7 @@ typedef struct
     GUI_button   ok_button;
     GUI_button   reload_button;
     GUI_button   exit_button;
-    GUI_button   drag_button;
+    SDL_FRect    drag_handle;
 
     SDL_Color    bg_color;
     SDL_Color    fg_color;
@@ -177,6 +182,10 @@ typedef struct
     SDL_Color    hover_color;
 
     pthread_t    key_listen_thread;
+
+    U8          keyboards_count;
+
+    bool         is_errored;
 
     bool         running;
 } App;

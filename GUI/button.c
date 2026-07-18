@@ -73,18 +73,12 @@ void init_buttons(App *app)
     app->dropdown.placeholder_texture = GUI_make_font_texture(app->font, app->renderer, "--No keyboards were found--", app->fg_color);
 
 
-    app->drag_button = (GUI_button)
+    app->drag_handle = (SDL_FRect)
     {
-        .rect = 
-        {
-            .x = win_width * X_FRAC_DRAG,
-            .y = win_width * Y_FRAC_DRAG,
-            .w = win_width * W_FRAC_DRAG,
-            .h = win_width * H_FRAC_DRAG,
-        },
-        .is_hovered = 0,
-        .is_pressed = 0,
-        .text_texture = IMG_LoadTexture(app->renderer, "src/drag-hand-gesture-svgrepo-com.svg")
+        .x = win_width * X_FRAC_DRAG,
+        .y = win_width * Y_FRAC_DRAG,
+        .w = win_width * W_FRAC_DRAG,
+        .h = win_width * H_FRAC_DRAG,
     };
 }
 

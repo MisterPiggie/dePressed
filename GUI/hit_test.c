@@ -9,7 +9,7 @@ SDL_HitTestResult GUI_drag(SDL_Window *window, const SDL_Point *point, void *dat
 
     SDL_GetWindowSize(window, &width, &height);
 
-    if (point_in_rect(point->x, point->y, &app->drag_button.rect))
+    if (point_in_rect(point->x, point->y, &app->drag_handle))
         return SDL_HITTEST_DRAGGABLE;
 
     return SDL_HITTEST_NORMAL;
@@ -17,16 +17,26 @@ SDL_HitTestResult GUI_drag(SDL_Window *window, const SDL_Point *point, void *dat
 
 void render_drag_handle(App *app)
 {
-    GUI_button drag = app->drag_button;
-    F32 img_width, img_height;
-    SDL_GetTextureSize(drag.text_texture, &img_width, &img_height);
-    SDL_FRect img_dest =
-    {
-        drag.rect.x,
-        drag.rect.y,
-        drag.rect.w,
-        drag.rect.h,
-    };
+    SDL_SetRenderDrawColor(app->renderer, app->idle_color.r, app->idle_color.g, app->idle_color.b, 255);
 
-    SDL_RenderTexture(app->renderer, drag.text_texture, NULL, &img_dest);
+    F32 line_height = 2.0f;
+    F32 gap = 9.0f;
+    F32 inset = app->drag_handle.w * 0.1f; 
+
+    F32 total_height = line_height * 3 + gap * 2;
+    F32 start_y = app->drag_handle.y + (app->drag_handle.h - total_height) / 2.0f;
+
+    for (int i = 0; i < 3; i++)
+    {
+        SDL_FRect line = {
+            app->drag_handle.x + inset,
+            app->drag_handle.y + i * (line_height + gap),
+            app->drag_handle.w - inset * 2,
+            line_height
+        };
+        SDL_RenderFillRect(app->renderer, &line);
+    }
 }
+
+
+
