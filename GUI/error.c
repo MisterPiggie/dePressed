@@ -27,8 +27,6 @@ void GUI_create_an_error(App *app, const char *message)
 
     app->errored_at_time = SDL_GetTicks();
     app->is_errored = true;
-
-    printf("ERROR CREATED\n");
 }
 
 void render_error(App *app)
