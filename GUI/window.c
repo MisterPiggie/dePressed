@@ -10,6 +10,9 @@
 
 SDL_Window *GUI_create_window(void)
 {
+#ifdef __linux__
+    SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
+#endif
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
@@ -35,7 +38,6 @@ SDL_Window *GUI_create_window(void)
     SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, window_height);
 
     SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_BORDERLESS_BOOLEAN, true);
-    SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_TRANSPARENT_BOOLEAN, true);
     SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_ALWAYS_ON_TOP_BOOLEAN, true);
 
     SDL_Window *window = SDL_CreateWindowWithProperties(props);

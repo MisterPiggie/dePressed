@@ -1,10 +1,13 @@
+#include <SDL3/SDL.h>
 #include "font.h"
+#include "JBM.h"
 
 
 TTF_Font *GUI_open_font(void)
 {
     TTF_Init();
-    TTF_Font *font = TTF_OpenFont("src/JetBrainsMonoNL-Bold.ttf", 13);
+    SDL_IOStream *io_stream = SDL_IOFromConstMem( src_JetBrainsMonoNL_Bold_ttf, (int)src_JetBrainsMonoNL_Bold_ttf_len);
+    TTF_Font *font = TTF_OpenFontIO(io_stream, true, 13);
 
     return font;
 }
