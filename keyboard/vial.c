@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
@@ -8,7 +7,7 @@
 
 void VIA_flush_response(hid_device *device)
 {
-    U8 scratch[VIA_PACKET_SIZE];
+    U8 scratch[VIA_PACKET_SIZE_65];
     while (hid_read_timeout(device, scratch, sizeof(scratch), 0) > 0)
     {
     }
@@ -41,13 +40,13 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
         VIA_flush_response(device);
         res = hid_write(device, req, RAW_HID_PACKET_SIZE + 1);
 
-        if (res != VIA_PACKET_SIZE)
+        if (res != VIA_PACKET_SIZE_33 && res != VIA_PACKET_SIZE_65)
             continue;
 
         VIA_settle_delay(2000);
 
-        memset(resp, 0, VIA_PACKET_SIZE);
-        res = hid_read_timeout(device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
+        memset(resp, 0, VIA_PACKET_SIZE_65);
+        res = hid_read_timeout(device, resp, VIA_PACKET_SIZE_65, VIA_READ_TIMEOUT);
         if (res <= 0)
             continue;
 
@@ -76,8 +75,8 @@ bool VIA_send_and_recieve(hid_device *device, const U8 *req, U8 *resp)
 
 bool VIA_confirm_protocol_version(KBS_model *model)
 {
-    U8 req[VIA_PACKET_SIZE] = {0};
-    U8 resp[VIA_PACKET_SIZE] = {0};
+    U8 req[VIA_PACKET_SIZE_65] = {0};
+    U8 resp[VIA_PACKET_SIZE_65] = {0};
 
     req[1] = VIA_GET_PROTOCOL_VERSION;
 
@@ -90,8 +89,8 @@ bool VIA_confirm_protocol_version(KBS_model *model)
 
 bool VIA_get_layers_count(KBS_model *model)
 {
-    U8 req[VIA_PACKET_SIZE] = {0};
-    U8 resp[VIA_PACKET_SIZE] = {0};
+    U8 req[VIA_PACKET_SIZE_65] = {0};
+    U8 resp[VIA_PACKET_SIZE_65] = {0};
 
     req[1] = VIA_GET_LAYER_COUNT;
 
@@ -170,14 +169,14 @@ bool VIAL_get_def(KBS_model *model, U8 *def_compressed, U32 def_size)
         {
             VIA_flush_response(model->device);
             
-            res = hid_write(model->device, req, VIA_PACKET_SIZE);
-            if (res != VIA_PACKET_SIZE)
+            res = hid_write(model->device, req, VIA_PACKET_SIZE_65);
+            if (res != VIA_PACKET_SIZE_33 && res != VIA_PACKET_SIZE_65)
                 continue;
 
             VIA_settle_delay(2000);
 
-            memset(resp, 0, VIA_PACKET_SIZE);
-            res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
+            memset(resp, 0, VIA_PACKET_SIZE_65);
+            res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE_65, VIA_READ_TIMEOUT);
             if (res <= 0)
                 continue;
 
@@ -244,13 +243,13 @@ bool VIAL_get_keymap(KBS_model *model, U8 *keymap_buf, U32 keymap_size)
             VIA_flush_response(model->device);
             res = hid_write(model->device, req, RAW_HID_PACKET_SIZE + 1);
 
-            if (res != VIA_PACKET_SIZE)
+            if (res != VIA_PACKET_SIZE_33 && res != VIA_PACKET_SIZE_65)
                 continue;
 
             VIA_settle_delay(2000);
 
-            memset(resp, 0, VIA_PACKET_SIZE);
-            res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE, VIA_READ_TIMEOUT);
+            memset(resp, 0, VIA_PACKET_SIZE_65);
+            res = hid_read_timeout(model->device, resp, VIA_PACKET_SIZE_65, VIA_READ_TIMEOUT);
             if (res <= 0)
                 continue;
 

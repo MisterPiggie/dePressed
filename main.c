@@ -22,8 +22,6 @@ int main(void)
     app.window = GUI_create_window();
     app.renderer = SDL_CreateRenderer(app.window, NULL);
 
-    SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
-
     app.font = GUI_open_font();
 
     app.bg_color = (SDL_Color){ 38, 31, 50, 255 };

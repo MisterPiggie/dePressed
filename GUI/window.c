@@ -10,7 +10,6 @@
 
 SDL_Window *GUI_create_window(void)
 {
-    SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
@@ -19,8 +18,8 @@ SDL_Window *GUI_create_window(void)
     U32 screen_width = mode->w;
     U32 screen_height = mode->h;
 
-    F32 scale_width = 0.5f;
-    F32 scale_height = 0.3f;
+    F32 scale_width = 0.4f;
+    F32 scale_height = 0.25f;
 
     U32 window_width = (U32)screen_width * scale_width;
     U32 window_height = (U32)screen_height * scale_height;
@@ -40,6 +39,7 @@ SDL_Window *GUI_create_window(void)
     SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_ALWAYS_ON_TOP_BOOLEAN, true);
 
     SDL_Window *window = SDL_CreateWindowWithProperties(props);
+
     SDL_DestroyProperties(props);
 
     return window;
@@ -214,7 +214,9 @@ void render_main_screen(App *app)
 
 void render_frame(App *app)
 {
-    SDL_SetRenderDrawColor(app->renderer, app->bg_color.r, app->bg_color.g, app->bg_color.b, 255);
+    SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(app->renderer, app->bg_color.r, app->bg_color.g, app->bg_color.b, 200);
+    SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_NONE);
     SDL_RenderClear(app->renderer);
  
     switch (app->current_screen)

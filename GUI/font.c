@@ -4,7 +4,7 @@
 TTF_Font *GUI_open_font(void)
 {
     TTF_Init();
-    TTF_Font *font = TTF_OpenFont("src/JetBrainsMonoNL-Bold.ttf", 14);
+    TTF_Font *font = TTF_OpenFont("src/JetBrainsMonoNL-Bold.ttf", 13);
 
     return font;
 }

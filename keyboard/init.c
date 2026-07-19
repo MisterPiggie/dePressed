@@ -166,7 +166,6 @@ bool KBS_connect_keyboard(App *app)
 
     cJSON_Delete(json);
 
-
     U32 keymap_size = model->layers_count * model->rows * model->cols * 2;
     U8 keymap_buf[keymap_size];
     memset(keymap_buf, 0, keymap_size);
@@ -174,6 +173,7 @@ bool KBS_connect_keyboard(App *app)
     if(!VIAL_get_keymap(model, keymap_buf, keymap_size))
     {
         GUI_create_an_error(app, ": failed to retrive VIAL keymap");
+        destroy_code_textures(app);
         return false;
     }
 
@@ -204,7 +204,11 @@ bool KBS_connect_keyboard(App *app)
     KBS_get_bounds(app);
 
     if (!KBS_start_key_listener(app))
-        assert(1);
+    {
+        GUI_create_an_error(app, ": failed to create thread");
+        destroy_code_textures(app);
+        return false;
+    }
 
     return true;
 }
@@ -366,7 +370,8 @@ void *KBS_key_listener_thread(void *arg)
 
 bool KBS_start_key_listener(App *app)
 {
-    if (pthread_mutex_init(&app->shared.mutex, NULL) != 0) return false;
+    if (pthread_mutex_init(&app->shared.mutex, NULL) != 0) 
+        return false;
     atomic_init(&app->shared.running, true);
     app->shared.active_layers = 1;
 
@@ -454,4 +459,14 @@ void app_exit(App *app)
     TTF_CloseFont(app->font);
 
     arena_destroy(&app->arena);
+}
+
+void destroy_code_textures(App *app)
+{
+    KBS_model *model = &app->keyboards[app->active_model_idx];
+
+    for (int i = 0; i < model->layout.key_count; i++)
+        for (int layers = 0; layers < model->layers_count; layers++)
+            if (model->layout.keys[i].code_textures[layers]) 
+                SDL_DestroyTexture(model->layout.keys[i].code_textures[layers]);
 }

@@ -4,7 +4,8 @@
 #include <stdbool.h>
 
 #define RAW_HID_PACKET_SIZE 64
-#define VIA_PACKET_SIZE (RAW_HID_PACKET_SIZE + 1)
+#define VIA_PACKET_SIZE_33 33
+#define VIA_PACKET_SIZE_65 65
 #define VIA_READ_TIMEOUT 100
 #define HID_USAGE_PAGE 0xFF60
 #define ID_CUSTOM_KEY_EVENT 0x77
