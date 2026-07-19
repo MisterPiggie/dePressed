@@ -77,7 +77,7 @@ Then flash resulted file onto you keyboard using qmk flash or use your board's u
  
 ### Option A: Use the prebuilt executable
  
-Prebuilt staticly linked executables for Linux and Windows are provided in the exec/ 
+Prebuilt staticly linked executables for Linux and Windows are provided in releases 
 
 ### Option B: Build from source
  
