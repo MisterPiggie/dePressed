@@ -71,13 +71,13 @@ For example:
 qmk compile -kb ergohaven/imperial44/rev1 -km v1_v2
 ```
 
-Then flash resulted file onto you keyboard using qmk flash or use your board's usual flashing method
+Then flash the resulted file onto your keyboard using `qmk flash` or use your board's usual flashing method
 
 ### 5.Installing dePressed
  
 ### Option A: Use the prebuilt executable
  
-Prebuilt staticly linked executables for Linux and Windows are provided in releases 
+Prebuilt statically linked executables for Linux and Windows are provided in releases 
 
 ### Option B: Build from source
  
@@ -99,9 +99,9 @@ This produces a `depressed` executable in the repo root. Run it with:
 
 ### 6. Run dePressed
 
-dePressed will automaticly detect all of the suitable keyboards for you to choose
+dePressed will automatically detect all of the suitable keyboards for you to choose
 
-## Dependecies 
+## Dependencies 
 
 dePressed includes the following libs:
 
