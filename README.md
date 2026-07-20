@@ -111,3 +111,14 @@ dePressed includes the following libs:
 - JSON (MIT license) - https://github.com/DaveGamble/cJSON
 
 Their licenses are saved in licenses/
+
+## TODO
+
+Features that I want to implement in the future:
+
+- Change UI colors
+- Change window size
+- ZMK support (do not have ZMK keyboard, so I cant actually test and debug)
+- Raw QMK support
+- Audio feedback for key presses with ability to choose audio file and turn it off
+
