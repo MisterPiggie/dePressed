@@ -121,4 +121,5 @@ Features that I want to implement in the future:
 - ZMK support (do not have ZMK keyboard, so I cant actually test and debug)
 - Raw QMK support
 - Audio feedback for key presses with ability to choose audio file and turn it off
+- Shortcut to hide an overlay without closing (need OS specific hooks)
 
