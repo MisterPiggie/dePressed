@@ -18,7 +18,7 @@ vial-qmk/keyboards/<your_keyboard>/keymaps/<your_keymap>/keymap.c
 
 ### 2. Add the Raw HID hooks
 
-Add the following code to your `keymap.c`. This adds two callback functions QMK will call automatically — one whenever the active layer changes, and one whenever any key is pressed or released 
+Add the following code to your `keymap.c`. This adds two callback functions QMK will call automatically - one whenever the active layer changes, and one whenever any key is pressed or released 
 
 ```c
 // Called automatically by QMK whenever the active layer changes.
