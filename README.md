@@ -78,10 +78,13 @@ Then flash the resulted file onto your keyboard using `qmk flash` or use your bo
 ### Option A: Use the prebuilt executable
  
 Prebuilt statically linked executables for Linux and Windows are provided in releases 
+Widnwos and Linux binaries are staticly linked, so you are not required to have dependent libraries
+
+On macOS, creating statically linked binaries is not natively supported. Therefore, please ensure you have the following libraries installed on your system before running the executable: `sdl3`, `sdl3-ttf`, `hidapi-hidraw`, and `liblzma` 
 
 ### Option B: Build from source
  
-If you'd rather build it yourself, tinker with source code or a prebuilt binary isn't available for your platform (Looking at you, Mac), you'll need a C compiler and the following libraries installed: `sdl3`, `sdl3-ttf`, `hidapi-hidraw`, and `liblzma` 
+If you'd rather build it yourself or tinker with source code or a prebuilt binary isn't available for your platform, you'll need a C compiler and the following libraries installed: `sdl3`, `sdl3-ttf`, `hidapi-hidraw`, and `liblzma` 
  
 From the root of the repo, compile with:
  
