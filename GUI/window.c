@@ -21,8 +21,8 @@ SDL_Window *GUI_create_window(void)
     U32 screen_width = mode->w;
     U32 screen_height = mode->h;
 
-    F32 scale_width = 0.4f;
-    F32 scale_height = 0.25f;
+    F32 scale_width = 0.5f;
+    F32 scale_height = 0.3f;
 
     U32 window_width = (U32)screen_width * scale_width;
     U32 window_height = (U32)screen_height * scale_height;
