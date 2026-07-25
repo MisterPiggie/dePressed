@@ -18,7 +18,13 @@ vial-qmk/keyboards/<your_keyboard>/keymaps/<your_keymap>/keymap.c
 
 ### 2. Add the Raw HID hooks
 
-Add the following code to your `keymap.c`. This adds two callback functions QMK will call automatically - one whenever the active layer changes, and one whenever any key is pressed or released 
+Add the following line to your `keymap.c` if not already included.
+
+```c
+#include "raw_hid.h"
+```
+
+Then add two callback functions QMK will call automatically - one whenever the active layer changes, and one whenever any key is pressed or released 
 
 ```c
 // Called automatically by QMK whenever the active layer changes.
@@ -53,7 +59,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
 In the same keymap folder (or your keyboard's `rules.mk` if you want it enabled by default), add:
 
 ```makefile
-RAW_HID_ENABLE = yes
+RAW_ENABLE = yes
 VIA_ENABLE = yes
 ```
 
@@ -79,6 +85,10 @@ Then flash the resulted file onto your keyboard using `qmk flash` or use your bo
  
 Prebuilt statically linked executables for Linux and Windows are provided in releases 
 Widnwos and Linux binaries are staticly linked, so you are not required to have dependent libraries
+> **Note:** Due to how dependencies are handled on Arch-based distros, you must have the `sdl3_ttf` package installed on your system to run the Linux binary. You can install it by running: 
+>```bash
+>sudo pacman -S sdl3_ttf
+>```
 
 On macOS, creating statically linked binaries is not natively supported. Therefore, please ensure you have the following libraries installed on your system before running the executable: `sdl3`, `sdl3-ttf`, `hidapi-hidraw`, and `liblzma` 
 
@@ -114,6 +124,10 @@ dePressed includes the following libs:
 - JSON (MIT license) - https://github.com/DaveGamble/cJSON
 
 Their licenses are saved in licenses/
+
+## Known Issues & Quirks
+
+- Hyprland restricts applications to change window position programmatically. As a result, the in-app drag button will not work. To move window use Hyprland native `movewindow` command.
 
 ## TODO
 
