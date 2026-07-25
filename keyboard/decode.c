@@ -118,7 +118,6 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         basic[0xCD]="MsUp", basic[0xCE]="MsDn", basic[0xCF]="MsLft", basic[0xD0]="MsRght", basic[0xD1]="MsBt1", 
         basic[0xD2]="MsBt2", basic[0xD3]="MsBt3", basic[0xD4]="MsBt4", basic[0xD5]="MsBt5", basic[0xD6]="MsBt6", 
         basic[0xD7]="MsBt7", basic[0xD8]="MsBt8", basic[0xD9]="MsWhUp", basic[0xDA]="MsWhDn", basic[0xDB]="MsWhLf", 
-        basic[0xD7]="MsBt7", basic[0xD8]="MsBt8", basic[0xD9]="MsWhUp", basic[0xDA]="MsWhDn", basic[0xDB]="MsWhLf", 
         basic[0xDC]="MsWhRt", basic[0xDD]="MsAc0", basic[0xDE]="MsAc1", basic[0xDF]="MsAc2", 
 
         basic[0xE0]="LCtrl", basic[0xE1]="Shift", basic[0xE2]="LAlt", basic[0xE3]="LGui",
@@ -161,6 +160,49 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         snprintf(buf, buf_size, "%s%s", mod_str, basic[base_kc]);
         return buf;
     }
+
+    if (kc >= 0x2000 && kc <= 0x3FFF)
+    {
+        U8 mods = (kc >> 8) & 0x1F;
+        U8 base_kc = kc & 0xFF;
+
+        if (!basic[base_kc])
+        {
+            snprintf(buf, buf_size, "0x%04X", kc);
+            return buf;
+        }
+
+        bool is_right = (mods & 0x10) != 0;
+        char mod_str[16] = "";
+        if (mods & 0x01) 
+            strcat(mod_str, is_right ? "RC" : "LC");
+        if (mods & 0x02) 
+            strcat(mod_str, is_right ? "RS" : "LS");
+        if (mods & 0x04) 
+            strcat(mod_str, is_right ? "RA" : "LA");
+        if (mods & 0x08) 
+            strcat(mod_str, is_right ? "RG" : "LG");
+
+        snprintf(buf, buf_size, "%s(%s)", mod_str, basic[base_kc]);
+        return buf;
+    }
+
+    if (kc >= 0x4000 && kc <= 0x4FFF)
+    {
+        U8 layer = (kc >> 8) & 0xF;
+        U8 base_kc = kc & 0xFF;
+
+        if (!basic[base_kc])
+        {
+            snprintf(buf, buf_size, "0x%04X", kc);
+            return buf;
+        }
+
+        snprintf(buf, buf_size, "L%d(%s)", layer, basic[base_kc]);
+        return buf;
+    }
+
+
 
     if (kc >= 0x5220 && kc <= 0x523F) 
     { 

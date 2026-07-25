@@ -5,6 +5,7 @@
 #include "GUI/font.h"
 #include "GUI/error.h"
 #include <float.h>
+#include <strings.h>
 #include <SDL3/SDL.h>
 #include <math.h>
 #include <stdlib.h>
@@ -333,7 +334,13 @@ static void KBS_get_bounds(App *app)
                 continue;
             char keycode_stirng_buf[16];
             const char *keycode_string = decode_keycode(key->code[j], keycode_stirng_buf, 16);
-            key->code_textures[j] = GUI_make_font_texture(app->font, app->renderer, keycode_string, app->fg_color);
+            if (strlen(keycode_string) > 8)
+            {
+                TTF_SetFontSize(app->font, 10);
+                key->code_textures[j] = GUI_make_font_texture(app->font, app->renderer, keycode_string, app->fg_color);
+                TTF_SetFontSize(app->font, 13);
+            } else
+                key->code_textures[j] = GUI_make_font_texture(app->font, app->renderer, keycode_string, app->fg_color);
 
             F32 text_width, text_height;
 
