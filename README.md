@@ -128,6 +128,7 @@ Their licenses are saved in licenses/
 ## Known Issues & Quirks
 
 - Hyprland restricts applications to change window position programmatically. As a result, the in-app drag button will not work. To move window use Hyprland native `movewindow` command.
+- Unknown keycodes are rendered as hexadecimal values by design. If a key is missing, please open an issue or submit a pull request.
 
 ## TODO
 
