@@ -107,7 +107,7 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         basic[0x9E]="Return", basic[0x9F]="Separ", basic[0xA0]="Out", basic[0xA1]="Oper", basic[0xA2]="ClearA", 
         basic[0xA3]="CrSel", basic[0xA4]="ExSel", basic[0xA5]="Power", basic[0xA6]="Sleep", basic[0xA7]="Wake", 
         basic[0xA8]="Mute", basic[0xA9]="VolUp", basic[0xAA]="VolDn", basic[0xAB]="NextTr", basic[0xAC]="PrevTr", 
-        basic[0xAD]="Stop", basic[0xAE]="Pause", basic[0xAF]="Select", basic[0xB0]="Eject", basic[0xB1]="Mail", 
+        basic[0xAD]="Stop", basic[0xAE]="Play", basic[0xAF]="Select", basic[0xB0]="Eject", basic[0xB1]="Mail",
         basic[0xB2]="Calc", basic[0xB3]="MyPC", 
 
 
@@ -228,10 +228,46 @@ const char *decode_keycode(U16 kc, char *buf, U32 buf_size)
         return buf;
     }
 
-    if (kc >= 0x5280 && kc <= 0x529F) 
+    if (kc >= 0x5280 && kc <= 0x529F)
     {
         snprintf(buf, buf_size, "OSL(%d)", kc - 0x5280);
         return buf;
+    }
+
+    if (kc >= 0x5700 && kc <= 0x57FF)
+    {
+        snprintf(buf, buf_size, "TD(%d)", kc - 0x5700);
+        return buf;
+    }
+
+    switch (kc)
+    {
+        case 0x7820: return "UG_TOGG";
+        case 0x7821: return "UG_NEXT";
+        case 0x7822: return "UG_PREV";
+        case 0x7823: return "UG_HUEU";
+        case 0x7824: return "UG_HUED";
+        case 0x7825: return "UG_SATU";
+        case 0x7826: return "UG_SATD";
+        case 0x7827: return "UG_VALU";
+        case 0x7828: return "UG_VALD";
+        case 0x7829: return "UG_SPDU";
+        case 0x782A: return "UG_SPDD";
+        case 0x7840: return "RM_ON";
+        case 0x7841: return "RM_OFF";
+        case 0x7842: return "RM_TOGG";
+        case 0x7843: return "RM_NEXT";
+        case 0x7844: return "RM_PREV";
+        case 0x7845: return "RM_HUEU";
+        case 0x7846: return "RM_HUED";
+        case 0x7847: return "RM_SATU";
+        case 0x7848: return "RM_SATD";
+        case 0x7849: return "RM_VALU";
+        case 0x784A: return "RM_VALD";
+        case 0x784B: return "RM_SPDU";
+        case 0x784C: return "RM_SPDD";
+        case 0x784D: return "RM_FLGN";
+        case 0x784E: return "RM_FLGP";
     }
 
     snprintf(buf, buf_size, "0x%04X", kc);

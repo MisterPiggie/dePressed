@@ -85,6 +85,7 @@ typedef struct
     hid_device      *device;
     U8              *lookup;
     bool            *pressed;
+    U64             *last_active_ms;
 
     KBS_layout      layout;
 
@@ -140,6 +141,7 @@ typedef struct
     pthread_mutex_t mutex;
     U32             active_layers;
     bool            *pressed;
+    U64             *last_active_ms;
     atomic_bool     running;
 } App_shared;
 

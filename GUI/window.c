@@ -204,7 +204,8 @@ void render_main_screen(App *app)
     {
         KBS_key *key = &model->layout.keys[i];  
 
-        SDL_Texture *bg_texture = app->shared.pressed[i] ? key->pressed_texture : key->idle_texture;
+        bool flash = (SDL_GetTicks() - app->shared.last_active_ms[i]) < MIN_FLASH_MS;
+        SDL_Texture *bg_texture = (app->shared.pressed[i] || flash) ? key->pressed_texture : key->idle_texture;
 
         SDL_RenderTextureRotated(app->renderer, bg_texture, NULL, &key->rect, key->angle, &key->center, SDL_FLIP_NONE);
 

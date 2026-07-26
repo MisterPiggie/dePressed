@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include "core/types.h"
 
+#define MIN_FLASH_MS 80
 
 SDL_Window *GUI_create_window(void);
 void handle_setup_events(App *app, SDL_Event *e);
