@@ -181,6 +181,8 @@ bool KBS_connect_keyboard(App *app)
     model->lookup = arena_push_array(&model->arena, U8, model->layout.key_count);
     model->pressed = arena_push_array_zero(&model->arena, bool, model->layout.key_count);
     app->shared.pressed = model->pressed;
+    model->last_active_ms = arena_push_array_zero(&model->arena, U64, model->layout.key_count);
+    app->shared.last_active_ms = model->last_active_ms;
 
     for (int i = 0; i < model->layout.key_count; i++)
     {
@@ -392,6 +394,7 @@ bool KBS_start_key_listener(App *app)
     {
         atomic_store(&app->shared.running, false);
         app->shared.pressed = NULL;
+        app->shared.last_active_ms = NULL;
         pthread_mutex_destroy(&app->shared.mutex);
         return false;
     }
@@ -409,6 +412,7 @@ void KBS_disconnect_keyboard(App *app)
         pthread_mutex_destroy(&app->shared.mutex);
     }
     app->shared.pressed = NULL;
+    app->shared.last_active_ms = NULL;
 
     hid_close(model->device);
     model->device = NULL;
@@ -431,6 +435,7 @@ void KBS_disconnect_keyboard(App *app)
     model->layout.key_count = 0;
     model->lookup = NULL;
     model->pressed = NULL;
+    model->last_active_ms = NULL;
     arena_destroy(&model->arena);
 }
 

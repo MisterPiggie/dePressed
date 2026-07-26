@@ -107,7 +107,9 @@ void HID_listen_for_keypresses(KBS_model *model, App_shared *shared)
                 U8 row = buf[1], col = buf[2], pressed = buf[3];
 
                 pthread_mutex_lock(&shared->mutex);
-                model->pressed[model->lookup[row * model->cols + col]] = (pressed == 1);
+                U8 key_idx = model->lookup[row * model->cols + col];
+                model->pressed[key_idx] = (pressed == 1);
+                model->last_active_ms[key_idx] = SDL_GetTicks();
                 pthread_mutex_unlock(&shared->mutex);
 
             } else if (buf[0] == ID_CUSTOM_LAYER_EVENT)
